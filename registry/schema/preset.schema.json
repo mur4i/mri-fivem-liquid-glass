@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Liquid glass preset",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "author",
+    "description",
+    "attributes"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Same as the file name."
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 40
+    },
+    "author": {
+      "type": "string",
+      "description": "GitHub user name."
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "options": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "blur": {
+          "type": "number"
+        },
+        "saturation": {
+          "type": "number"
+        },
+        "darken": {
+          "type": "number"
+        },
+        "scale": {
+          "type": "number"
+        }
+      }
+    },
+    "attributes": {
+      "type": "object",
+      "required": [
+        "data-glass"
+      ],
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 24
+      },
+      "propertyNames": {
+        "enum": [
+          "data-glass",
+          "data-glass-bezel",
+          "data-glass-refraction",
+          "data-glass-dispersion",
+          "data-glass-specular",
+          "data-glass-shape",
+          "data-glass-lens",
+          "data-glass-facets"
+        ]
+      }
+    }
+  }
+}

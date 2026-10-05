@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Showcase entry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "author",
+    "description",
+    "url",
+    "tags"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 40
+    },
+    "author": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "url": {
+      "type": "string",
+      "pattern": "^https://"
+    },
+    "repo": {
+      "type": "string",
+      "pattern": "^https://"
+    },
+    "image": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+.(webp|png|jpg)$",
+      "description": "File in registry/showcase/images, at most 300 KB."
+    },
+    "tags": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+      }
+    }
+  }
+}
