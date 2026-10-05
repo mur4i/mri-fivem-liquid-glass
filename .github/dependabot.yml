@@ -1,5 +1,6 @@
 version: 2
 updates:
+  # Minor and patch only: these merge by themselves when CI passes. Majors are upgraded by hand.
   - package-ecosystem: npm
     directory: /
     schedule:
@@ -7,6 +8,9 @@ updates:
     groups:
       dev:
         dependency-type: development
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
   - package-ecosystem: github-actions
     directory: /
     schedule:
