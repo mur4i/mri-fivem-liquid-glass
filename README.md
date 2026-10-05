@@ -34,7 +34,7 @@ to blur. Paid resources work around it with closed code. This is the open, docum
   text color over bright scenes.
 - **Built for the game**: survives loading screens, black frames and lost hooks; never stalls
   the GPU to read pixels.
-- **Tiny, no framework needed**: one module with zero dependencies (about 16 KB minified) for React,
+- **Tiny, no framework needed**: one module with zero dependencies (about 18 KB minified) for React,
   Vue, Svelte or plain HTML.
 
 ## Install

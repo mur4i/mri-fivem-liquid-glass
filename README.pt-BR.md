@@ -30,7 +30,7 @@ documentada.
   cor do texto sobre cena clara.
 - **Feito pro jogo**: aguenta tela de loading, frame preto e hook perdido, sem travar a GPU pra
   ler pixel.
-- **Pequena e sem framework**: um módulo sem dependências (uns 16 KB minificado) pra React, Vue,
+- **Pequena e sem framework**: um módulo sem dependências (uns 18 KB minificado) pra React, Vue,
   Svelte ou HTML puro.
 
 ## Instalar
