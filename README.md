@@ -9,8 +9,8 @@ it blurs and refracts the live GTA V frame behind your HTML elements.
 
 [![npm](https://img.shields.io/npm/v/mri-fivem-liquid-glass?color=00e699)](https://www.npmjs.com/package/mri-fivem-liquid-glass)
 [![CI](https://github.com/mur4i/mri-fivem-liquid-glass/actions/workflows/ci.yml/badge.svg)](https://github.com/mur4i/mri-fivem-liquid-glass/actions/workflows/ci.yml)
-[![license](https://img.shields.io/github/license/mur4i/mri-fivem-liquid-glass)](LICENSE)
-[![sponsor](https://img.shields.io/github/sponsors/mur4i?label=sponsor&logo=github)](https://github.com/sponsors/mur4i)
+[![license](https://img.shields.io/npm/l/mri-fivem-liquid-glass)](LICENSE)
+[![sponsor](https://img.shields.io/badge/sponsor-mur4i-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/mur4i)
 
 [Live demo](https://mur4i.github.io/mri-fivem-liquid-glass/) ·
 [How it works](docs/how-it-works.md) ·
