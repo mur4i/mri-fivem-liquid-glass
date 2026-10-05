@@ -19,7 +19,8 @@
   },
   "files": [
     "dist",
-    "skills"
+    "skills",
+    "bin"
   ],
   "sideEffects": false,
   "scripts": {
@@ -67,5 +68,8 @@
     "typescript": "^7.0.2",
     "vitepress": "^1.6.4",
     "vue": "^3.5.43"
+  },
+  "bin": {
+    "mri-fivem-liquid-glass": "./bin/cli.mjs"
   }
 }

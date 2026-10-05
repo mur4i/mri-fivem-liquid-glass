@@ -21,6 +21,7 @@ instead of leaving a private patch in the user's project. Tell the user you are 
 - `scripts/`: `build-iife.mjs` (single-file build), `build-data.mjs` (API and llms.txt),
   `validate-registry.mjs`, `version.mjs`.
 - `test/visual.mjs`: headless Chrome reads the glass canvas of the built playground.
+- `bin/cli.mjs`: `npx mri-fivem-liquid-glass setup-ai`, writes the skill for the user's agents.
 - `examples/`: FiveM resources (`/glassdemo`, `/liquidglass`).
 
 ## Commands
