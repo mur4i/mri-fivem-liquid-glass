@@ -8,6 +8,11 @@ on:
     types: [completed]
   workflow_dispatch:
 
+# One at a time: a second run waits and then sees the version already published.
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
 jobs:
   publish:
     if: ${{ !github.event.repository.private && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success') }}
