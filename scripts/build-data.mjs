@@ -51,6 +51,10 @@ files['index.json'] = {
   endpoints: Object.keys(files).map((f) => `${site}/api/v1/${f}`),
   docs: `${site}/api`,
 }
+// Showcase images live next to their entries; the site serves them from /showcase/.
+const images = path.join(root, 'registry/showcase/images')
+if (fs.existsSync(images)) fs.cpSync(images, path.join(out, 'showcase'), { recursive: true })
+
 for (const [name, data] of Object.entries(files)) {
   fs.writeFileSync(path.join(api, name), JSON.stringify(data, null, 2) + '\n')
 }

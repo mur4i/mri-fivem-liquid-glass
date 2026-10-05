@@ -1,0 +1,13 @@
+{
+  "id": "mri-ui-kit",
+  "name": "MRI ui-kit liquid theme",
+  "author": "mur4i",
+  "description": "The MRI Brasil suite turns every surface into glass with its liquid theme, built on this library.",
+  "url": "https://github.com/mri-Qbox-Brasil/mri-ui-kit",
+  "repo": "https://github.com/mri-Qbox-Brasil/mri-ui-kit",
+  "image": "mri-ui-kit.webp",
+  "tags": [
+    "ui-kit",
+    "qbox"
+  ]
+}

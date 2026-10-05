@@ -1,0 +1,13 @@
+{
+  "id": "mri-brasil-showcase",
+  "name": "MRI Brasil showcase",
+  "author": "mur4i",
+  "description": "The resource from the demo video: liquid menu, dock, draggable orb, gem, kaleidoscope and live controls, in game.",
+  "url": "https://www.youtube.com/watch?v=W2z3DP6N95c",
+  "repo": "https://github.com/mur4i/mri-fivem-liquid-glass/tree/main/examples/showcase-resource",
+  "image": "mri-brasil-showcase.webp",
+  "tags": [
+    "showcase",
+    "example"
+  ]
+}

@@ -7,3 +7,4 @@ docs/public/llms.txt
 docs/public/llms-full.txt
 *.log
 .DS_Store
+docs/public/showcase/

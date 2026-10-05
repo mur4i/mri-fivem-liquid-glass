@@ -175,7 +175,11 @@ watch(presetId, (id) => id && usePreset(id))
 
 onMounted(() => {
   const img = new Image()
-  img.onload = () => show(img)
+  img.onload = () => {
+    show(img)
+    const wanted = new URLSearchParams(location.search).get('preset')
+    if (wanted) presetId.value = wanted
+  }
   img.src = withBase('/scene.webp')
   addEventListener('resize', onResize)
   addEventListener('dragover', (e) => e.preventDefault())
