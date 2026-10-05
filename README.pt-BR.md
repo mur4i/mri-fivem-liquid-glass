@@ -169,7 +169,7 @@ O hook do frame do jogo faz parte da camada de NUI da Cfx.re e é usado pelo
 [screencapture](https://github.com/itschip/screencapture). Esta biblioteca foi escrita do zero
 em cima dele.
 
-Feito por [Murai](https://github.com/mur4i), da equipe [MRI Qbox Brasil](https://github.com/mri-Qbox-Brasil),
+Feito por [Murai](https://github.com/mur4i), da equipe **MRI Brasil** ([projetos de FiveM e Qbox](https://github.com/mri-Qbox-Brasil)),
 onde já roda em produção nas telas de interação, garagem e ox_lib.
 
 Sem vínculo com Apple, Cfx.re ou Rockstar Games. "Liquid glass" descreve o estilo visual.

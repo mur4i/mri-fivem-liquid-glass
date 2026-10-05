@@ -174,8 +174,8 @@ The game frame hook is part of the Cfx.re NUI layer and is used by
 [screencapture](https://github.com/itschip/screencapture). This library is written from
 scratch on top of it.
 
-Made by [Murai](https://github.com/mur4i) from the [MRI Qbox Brasil](https://github.com/mri-Qbox-Brasil)
-team, where it already runs in production in interaction, garage and ox_lib screens.
+Made by [Murai](https://github.com/mur4i) from the **MRI Brasil** team ([FiveM and Qbox projects](https://github.com/mri-Qbox-Brasil)),
+where it already runs in production in interaction, garage and ox_lib screens.
 
 Not affiliated with Apple, Cfx.re or Rockstar Games. "Liquid glass" describes the visual style.
 
