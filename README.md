@@ -166,8 +166,8 @@ frame hook is a GL texture anyway.
 **RedM?** The hook lives in the shared Cfx.re NUI layer, so it should work. Reports welcome.
 
 **Performance?** `resmon` shows 0.00 ms for the showcase resource: nothing runs in Lua, the work is
-on the GPU inside the NUI. On an RTX 4060 Laptop at 1080p the game runs at 98 fps with the showcase closed
-and 90 fps with all 21 glass elements on screen, about 0.9 ms per frame. Blur runs at a quarter of the screen and the rim math only inside glass
+on the GPU inside the NUI. On an RTX 4060 Laptop at 1080p there is no measurable FPS drop: closed, the
+scene swings between 89 and 98 fps, and with all 21 glass elements on screen it stays around 90. Blur runs at a quarter of the screen and the rim math only inside glass
 elements. Share your numbers in an issue.
 
 ## Credits
