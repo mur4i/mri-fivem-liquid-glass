@@ -161,8 +161,8 @@ hook do frame do jogo é uma textura GL de qualquer jeito.
 bem-vindos.
 
 **Desempenho?** O `resmon` mostra 0,00 ms no resource do showcase: nada roda no Lua, o trabalho é na
-GPU, dentro da NUI. Com todos os elementos de vidro do showcase na tela, segura 90 fps em 1080p numa
-RTX 4060 Laptop. O blur roda em 1/4 da tela e a conta do bisel só dentro dos elementos de vidro.
+GPU, dentro da NUI. Numa RTX 4060 Laptop em 1080p, o jogo roda a 98 fps com o showcase fechado e a 90 fps com
+os 21 elementos de vidro na tela, cerca de 0,9 ms por quadro. O blur roda em 1/4 da tela e a conta do bisel só dentro dos elementos de vidro.
 Mande seus números numa issue.
 
 ## Créditos
