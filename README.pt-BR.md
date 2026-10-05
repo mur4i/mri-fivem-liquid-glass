@@ -174,6 +174,11 @@ quando o CI passa.
 
 ## Créditos
 
+Obrigado ao **Kypos** ([gtasnail](https://github.com/gtasnail)) pelo [fivem-glsl](https://github.com/gtasnail/fivem-glsl),
+a primeira prova de conceito pública de rodar shaders no frame do jogo dentro da NUI
+([post no fórum, 2024](https://forum.cfx.re/t/fivem-nui-glsl-poc-dev-resource/5261494)). Ele mostrou
+pra comunidade que isso era possível.
+
 O hook do frame do jogo faz parte da camada de NUI da Cfx.re e é usado pelo
 [screenshot-basic](https://github.com/citizenfx/screenshot-basic) e pelo
 [screencapture](https://github.com/itschip/screencapture). Esta biblioteca foi escrita do zero

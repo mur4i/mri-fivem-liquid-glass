@@ -179,6 +179,11 @@ automatically when CI passes.
 
 ## Credits
 
+Thank you to **Kypos** ([gtasnail](https://github.com/gtasnail)) for [fivem-glsl](https://github.com/gtasnail/fivem-glsl),
+the first public proof of concept of running shaders on the game frame inside NUI
+([forum post, 2024](https://forum.cfx.re/t/fivem-nui-glsl-poc-dev-resource/5261494)). It showed the
+community that this was possible.
+
 The game frame hook is part of the Cfx.re NUI layer and is used by
 [screenshot-basic](https://github.com/citizenfx/screenshot-basic) and
 [screencapture](https://github.com/itschip/screencapture). This library is written from
