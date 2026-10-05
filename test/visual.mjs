@@ -58,15 +58,17 @@ const probe = `(() => {
   g.drawImage(gl, 0, 0);
   const alpha = (x, y) => g.getImageData(Math.round(x), Math.round(y), 1, 1).data[3];
   const rect = (sel) => document.querySelector(sel).getBoundingClientRect();
-  const hero = rect('.pg-brand');
+  // Hidden elements (display: none on short screens) get no glass and no tone.
+  const visible = [...document.querySelectorAll('[data-glass]')].filter((e) => e.getBoundingClientRect().width > 0);
+  const hero = rect('.pg-controls');
   const orb = rect('#pg-orb');
   return {
     heroInside: alpha(hero.left + hero.width / 2, hero.top + hero.height / 2),
     orbInside: alpha(orb.left + orb.width / 2, orb.top + orb.height / 2),
     orbCorner: alpha(orb.left + 4, orb.top + 4),
     outside: alpha(innerWidth / 2, 40),
-    tones: [...document.querySelectorAll('[data-glass]')].filter((e) => e.dataset.glassBackdrop).length,
-    total: document.querySelectorAll('[data-glass]').length,
+    tones: visible.filter((e) => e.dataset.glassBackdrop).length,
+    total: visible.length,
   };
 })()`;
 
