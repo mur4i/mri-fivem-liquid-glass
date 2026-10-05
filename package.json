@@ -1,0 +1,63 @@
+{
+  "name": "mri-fivem-liquid-glass",
+  "version": "0.0.0-development",
+  "description": "Real liquid glass and game blur for FiveM NUI: blurs and refracts the live GTA V frame behind your HTML elements, where CSS backdrop-filter cannot see the game.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./iife": "./dist/mri-liquid-glass.iife.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node scripts/build-iife.mjs",
+    "typecheck": "tsc --noEmit",
+    "dev": "node scripts/serve.mjs",
+    "test": "node test/visual.mjs",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "fivem",
+    "redm",
+    "cfx",
+    "nui",
+    "liquid-glass",
+    "glassmorphism",
+    "backdrop-filter",
+    "blur",
+    "webgl",
+    "gta5"
+  ],
+  "author": "Murai (https://github.com/mur4i)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mur4i/mri-fivem-liquid-glass.git"
+  },
+  "homepage": "https://mur4i.github.io/mri-fivem-liquid-glass/",
+  "bugs": {
+    "url": "https://github.com/mur4i/mri-fivem-liquid-glass/issues"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/mur4i"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "esbuild": "^0.25.0",
+    "semantic-release": "^24.2.0",
+    "typescript": "^5.6.0"
+  }
+}

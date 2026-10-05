@@ -1,0 +1,40 @@
+name: Bug report
+description: Something looks or behaves wrong
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens
+      description: What you see, and what you expected instead. A screenshot or short video helps a lot.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: Minimal markup and CSS, or the steps in game.
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - FiveM
+        - RedM
+        - Browser (fallbackImage)
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Library version, game build, GPU.
+      placeholder: 1.2.0, build 3258, RTX 3060
+  - type: textarea
+    id: logs
+    attributes:
+      label: Client log
+      description: Lines mentioning [liquid-glass] from FiveM.app/logs/CitizenFX_log_*.log
+      render: text

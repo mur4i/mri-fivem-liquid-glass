@@ -1,0 +1,50 @@
+name: Publish
+
+# npm trusted publishing (OIDC), no token. npm binds the permission to this file name: keep it
+# publish.yml. Runs after Release because events created by GITHUB_TOKEN do not trigger workflows.
+on:
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    if: ${{ !github.event.repository.private && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      # main, not the triggering commit: the version bump lands in the release commit after it.
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+
+      # No registry-url: it writes an .npmrc that expects a token and breaks OIDC.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.x
+          cache: npm
+
+      # Trusted publishing needs npm 11.5.1 or newer.
+      - run: npm install -g npm@latest
+
+      - run: npm ci
+
+      - name: Skip if already published
+        id: check
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version > /dev/null 2>&1; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.check.outputs.published == 'false'
+        run: npm run build
+
+      - if: steps.check.outputs.published == 'false'
+        run: npm publish

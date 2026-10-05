@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.x
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      # Headless Chrome reads the glass canvas back and checks it pixel by pixel.
+      - name: Visual test
+        env:
+          CHROME: google-chrome
+          SHOT: demo.png
+        run: npm test
+
+      - name: Screenshot
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: demo-screenshot
+          path: demo.png
+          if-no-files-found: ignore
