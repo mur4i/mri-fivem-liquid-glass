@@ -8,6 +8,7 @@ O `backdrop-filter` do CSS não enxerga o jogo dentro do navegador do FiveM. Est
 enxerga: ela desfoca e refrata o frame do GTA V, ao vivo, atrás dos seus elementos HTML.
 
 [Demo ao vivo](https://mur4i.github.io/mri-fivem-liquid-glass/) ·
+[Vídeo](https://www.youtube.com/watch?v=W2z3DP6N95c) ·
 [Como funciona](docs/how-it-works.md) ·
 [English](README.md)
 

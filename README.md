@@ -13,6 +13,7 @@ it blurs and refracts the live GTA V frame behind your HTML elements.
 [![sponsor](https://img.shields.io/badge/sponsor-mur4i-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/mur4i)
 
 [Live demo](https://mur4i.github.io/mri-fivem-liquid-glass/) ·
+[Video](https://www.youtube.com/watch?v=W2z3DP6N95c) ·
 [How it works](docs/how-it-works.md) ·
 [Português](README.pt-BR.md)
 
