@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>mri-fivem-liquid-glass</title>
 <meta name="description" content="Real liquid glass and game blur for FiveM NUI. Live demo.">
+<link rel="preload" as="image" href="scene.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -104,16 +105,31 @@
 </main>
 <script type="module">
   import { startGameGlass } from './lib/index.js';
-  import { paintScene } from './scene.js';
 
-  const scene = paintScene(document.getElementById('scene'));
-  let source = scene;
-  let glass = null;
   const $ = (id) => document.getElementById(id);
+  const scene = $('scene');
+  let image = null;
+  let glass = null;
+
+  // Draws the backdrop like object-fit: cover; the glass reads this canvas instead of the game.
+  function paint() {
+    if (!image) return;
+    scene.width = innerWidth;
+    scene.height = innerHeight;
+    const k = Math.max(innerWidth / image.width, innerHeight / image.height);
+    scene.getContext('2d').drawImage(image, (innerWidth - image.width * k) / 2, (innerHeight - image.height * k) / 2, image.width * k, image.height * k);
+  }
 
   function restart() {
+    if (!image) return;
     glass?.stop();
-    glass = startGameGlass({ fallbackImage: source, blur: Number($('blur').value), temporal: 1 });
+    glass = startGameGlass({ fallbackImage: scene, blur: Number($('blur').value), temporal: 1 });
+  }
+
+  function show(img) {
+    image = img;
+    paint();
+    restart();
   }
 
   function applyLens() {
@@ -156,26 +172,19 @@
     const file = e.dataTransfer?.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
     const img = new Image();
-    img.onload = () => {
-      const c = document.getElementById('scene');
-      c.width = innerWidth;
-      c.height = innerHeight;
-      const g = c.getContext('2d');
-      const k = Math.max(innerWidth / img.width, innerHeight / img.height);
-      g.drawImage(img, (innerWidth - img.width * k) / 2, (innerHeight - img.height * k) / 2, img.width * k, img.height * k);
-      source = c;
-      restart();
-    };
+    img.onload = () => show(img);
     img.src = URL.createObjectURL(file);
   });
 
   addEventListener('resize', () => {
-    if (source === scene) paintScene(scene);
+    paint();
     restart();
   });
 
   applyLens();
-  restart();
+  const first = new Image();
+  first.onload = () => show(first);
+  first.src = './scene.webp';
 </script>
 </body>
 </html>

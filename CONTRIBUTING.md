@@ -19,7 +19,7 @@ npm test           # headless Chrome visual test (needs Google Chrome)
 npm run typecheck
 ```
 
-Outside the game there is no game frame: the demo uses a procedural scene through
+Outside the game there is no game frame: the demo uses a game screenshot (`site/scene.webp`) through
 `fallbackImage`. You can drop a real GTA screenshot on the demo page.
 
 **The browser is not the game.** Anything touching the hook, timing, black frames or
