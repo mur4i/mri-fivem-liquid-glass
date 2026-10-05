@@ -58,7 +58,12 @@
   .orb { left: 62%; top: 38%; width: 190px; height: 190px; border-radius: 50%; cursor: grab; display: grid; place-items: center; text-align: center; font-weight: 600; touch-action: none; }
   .orb:active { cursor: grabbing; }
 
+  .gem { left: 79%; top: 44%; width: 170px; height: 170px; border: 0; border-radius: 6px; box-shadow: none;
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+  .kaleido { left: 31%; top: 46%; width: 160px; height: 160px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 600; }
+
   @media (max-width: 760px) {
+    .gem, .kaleido { display: none; }
     .menu, .controls { display: none; }
     .hero { left: 16px; top: 16px; width: calc(100vw - 32px); }
     .orb { left: calc(50% - 80px); top: 52%; width: 160px; height: 160px; }
@@ -85,6 +90,8 @@
   </nav>
 
   <div class="orb" data-glass="liquid" id="orb">Drag me</div>
+  <div class="gem" data-glass="liquid" data-glass-shape="diamond" data-glass-lens="gem" title="data-glass-lens=gem"></div>
+  <div class="kaleido" data-glass="liquid" data-glass-lens="kaleidoscope" data-glass-facets="8">Kaleidoscope</div>
 
   <div class="dock" data-glass>
     <div class="key" data-glass="liquid">E</div>

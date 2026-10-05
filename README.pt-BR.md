@@ -105,9 +105,15 @@ export function App() {
 | `data-glass-refraction` | px | Quanto a borda entorta o fundo |
 | `data-glass-dispersion` | 0 a 1 | Separação de cor na borda |
 | `data-glass-specular` | 0 a 1 | Força do brilho da borda |
+| `data-glass-shape` | `diamond` | Contorno de diamante no lugar do retângulo arredondado (o `border-radius` arredonda as pontas) |
+| `data-glass-lens` | `gem` / `kaleidoscope` | Gema lapidada em facetas, ou o fundo espelhado em fatias em volta do centro |
+| `data-glass-facets` | número | Facetas da gema (8) ou fatias do caleidoscópio (6) |
 | `data-glass-backdrop` | `bright` / `dark` | Definido pela biblioteca pelo brilho do fundo |
 
-Qualquer atributo de ajuste fino também liga o bisel num `data-glass` comum.
+Qualquer atributo de ajuste fino (ou uma lente) também liga o bisel num `data-glass` comum.
+
+Um diamante lapidado: `<div data-glass="liquid" data-glass-shape="diamond" data-glass-lens="gem"></div>`.
+Dê ao elemento um `clip-path` igual, pra a tinta e a borda dele seguirem o diamante.
 
 ## Opções
 
@@ -120,7 +126,7 @@ Qualquer atributo de ajuste fino também liga o bisel num `data-glass` comum.
 | `blur` | `14` | Sigma do gaussiano em px de tela |
 | `saturation` | `1.15` | Saturação do fundo |
 | `darken` | `1` | Multiplicador de brilho do fundo |
-| `temporal` | `0.55` | Peso de cada frame novo (1 desliga a suavização) |
+| `temporal` | `0.45` | Peso de cada frame novo a 60 fps, ajustado pelo tempo real do frame (1 desliga a suavização) |
 | `light` | `[-0.6, -0.8]` | Direção do brilho em coordenadas de tela (de cima à esquerda) |
 | `zIndex` | `0` | z-index do canvas do vidro |
 | `toneInterval` | `200` | ms entre atualizações do `data-glass-backdrop` |

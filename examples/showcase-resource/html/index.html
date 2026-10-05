@@ -49,13 +49,15 @@
   .orb.shape-pill { width: 300px; height: 110px; border-radius: 999px; }
   .orb.shape-square { width: 200px; height: 200px; border-radius: 36px; }
   .orb.shape-big { width: 320px; height: 320px; border-radius: 50%; }
+  .orb.shape-diamond { width: 250px; height: 250px; border: 0; border-radius: 6px; box-shadow: none;
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
 
   .controls { left: 40px; bottom: 36px; width: 320px; padding: 16px 18px; border-radius: var(--radius); }
   .controls h2 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
   .row { display: grid; grid-template-columns: 86px 1fr 38px; align-items: center; gap: 8px; margin: 4px 0; }
   .row output { text-align: right; font-variant-numeric: tabular-nums; }
   input[type=range] { width: 100%; accent-color: var(--accent); }
-  .shapes, .modes { display: flex; gap: 6px; margin-top: 10px; }
+  .shapes, .modes, .lenses { display: flex; gap: 6px; margin-top: 10px; }
   .chip { position: relative; flex: 1; padding: 7px 0; text-align: center; border-radius: 999px; cursor: pointer;
     font-size: 12px; font-weight: 600; }
   .chip.on { outline: 2px solid var(--accent); outline-offset: -2px; }
@@ -79,6 +81,7 @@
     ['tint', 'Tint', 0, 30], ['radius', 'Radius', 0, 48],
   ];
   let shape = 'circle';
+  let lensMode = 'liquid';
   let panelsLiquid = false;
   let orbX = innerWidth * 0.6;
   let orbY = innerHeight * 0.42;
@@ -125,6 +128,17 @@
     if (orb) orb.style.transform = `translate(${orbX - orb.offsetWidth / 2}px, ${orbY - orb.offsetHeight / 2}px)`;
   }
 
+  // Shape and lens of the orb go through attributes; the glass reads them on the next frame.
+  function applyOrbLens() {
+    const orb = document.getElementById('orb');
+    if (!orb) return;
+    if (shape === 'diamond') orb.dataset.glassShape = 'diamond';
+    else delete orb.dataset.glassShape;
+    if (lensMode === 'liquid') delete orb.dataset.glassLens;
+    else orb.dataset.glassLens = lensMode;
+    orb.textContent = lensMode === 'liquid' && shape !== 'diamond' ? 'Drag me' : '';
+  }
+
   const panel = (liquid) => (liquid ? 'data-glass="liquid"' : 'data-glass');
 
   function render(open) {
@@ -157,7 +171,10 @@
         ${sliders.map(([id, label, min, max]) => `
           <label class="row">${label}<input type="range" data-key="${id}" min="${min}" max="${max}" value="${settings[id]}"><output>${settings[id]}</output></label>`).join('')}
         <div class="shapes">
-          ${['circle', 'pill', 'square', 'big'].map((s) => `<div class="chip ${s === shape ? 'on' : ''}" data-glass="liquid" data-shape="${s}">${s}</div>`).join('')}
+          ${['circle', 'pill', 'square', 'big', 'diamond'].map((s) => `<div class="chip ${s === shape ? 'on' : ''}" data-glass="liquid" data-shape="${s}">${s}</div>`).join('')}
+        </div>
+        <div class="lenses">
+          ${['liquid', 'gem', 'kaleidoscope'].map((l) => `<div class="chip ${l === lensMode ? 'on' : ''}" data-glass="liquid" data-lens="${l}">${l === 'kaleidoscope' ? 'kaleido' : l}</div>`).join('')}
         </div>
         <div class="modes">
           <div class="chip ${panelsLiquid ? '' : 'on'}" data-glass="liquid" data-panels="frosted">Frosted panels</div>
@@ -166,6 +183,7 @@
       </section>
       <div class="hint soft" data-glass>Drag the orb to move it. Drag anywhere else to look around. Esc to close.</div>`;
 
+    applyOrbLens();
     placeOrb();
     if (!glass) startGlass();
     applyLens();
@@ -188,7 +206,12 @@
       const orb = document.getElementById('orb');
       orb.className = `orb shape-${shape}`;
       root.querySelectorAll('[data-shape]').forEach((c) => c.classList.toggle('on', c === chip));
+      applyOrbLens();
       followMorph(orb);
+    } else if (chip.dataset.lens) {
+      lensMode = chip.dataset.lens;
+      root.querySelectorAll('[data-lens]').forEach((c) => c.classList.toggle('on', c === chip));
+      applyOrbLens();
     } else if (chip.dataset.panels) {
       panelsLiquid = chip.dataset.panels === 'liquid';
       render(true);

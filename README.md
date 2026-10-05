@@ -110,9 +110,15 @@ export function App() {
 | `data-glass-refraction` | px | How far the rim bends the backdrop |
 | `data-glass-dispersion` | 0 to 1 | Color split on the rim |
 | `data-glass-specular` | 0 to 1 | Rim highlight strength |
+| `data-glass-shape` | `diamond` | Diamond outline instead of the rounded box (`border-radius` rounds its tips) |
+| `data-glass-lens` | `gem` / `kaleidoscope` | Faceted cut gem, or the backdrop mirrored into slices around the center |
+| `data-glass-facets` | number | Facets of the gem (8) or slices of the kaleidoscope (6) |
 | `data-glass-backdrop` | `bright` / `dark` | Set by the library from the backdrop luminance |
 
-Any of the fine tuning attributes also turns the rim on for a plain `data-glass` element.
+Any of the fine tuning attributes (or a lens) also turns the rim on for a plain `data-glass` element.
+
+A diamond gem: `<div data-glass="liquid" data-glass-shape="diamond" data-glass-lens="gem"></div>`.
+Give the element a matching `clip-path` so its own tint and border follow the diamond.
 
 ## Options
 
@@ -125,7 +131,7 @@ Any of the fine tuning attributes also turns the rim on for a plain `data-glass`
 | `blur` | `14` | Gaussian sigma in screen pixels |
 | `saturation` | `1.15` | Backdrop saturation |
 | `darken` | `1` | Backdrop brightness multiplier |
-| `temporal` | `0.55` | Weight of each new frame (1 disables smoothing) |
+| `temporal` | `0.45` | Weight of each new frame at 60 fps, scaled by the real frame time (1 disables smoothing) |
 | `light` | `[-0.6, -0.8]` | Highlight direction in screen space (top left) |
 | `zIndex` | `0` | z-index of the glass canvas |
 | `toneInterval` | `200` | ms between `data-glass-backdrop` updates |

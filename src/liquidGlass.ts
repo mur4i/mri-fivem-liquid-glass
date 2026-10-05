@@ -26,7 +26,7 @@ export interface GameGlassOptions {
   blur?: number
   saturation?: number
   darken?: number
-  /** Weight of the new frame against the previous blur (1 disables smoothing). */
+  /** Weight of each new frame at 60 fps, scaled by the real frame time (1 disables smoothing). */
   temporal?: number
   /** Canvas z-index; the UI root must sit above it. */
   zIndex?: number
@@ -79,6 +79,9 @@ interface Resources {
 
 interface Meta {
   radius: string
+  shape: number
+  lensMode: number
+  facets: number | null
   liquid: boolean
   bezel: number | null
   refraction: number | null
@@ -101,7 +104,7 @@ const DEFAULTS = {
   blur: 14,
   saturation: 1.15,
   darken: 1,
-  temporal: 0.55,
+  temporal: 0.45,
   zIndex: 0,
   toneInterval: 200,
   light: [-0.6, -0.8] as [number, number],
@@ -111,6 +114,20 @@ const DEFAULTS = {
 const THUMB_W = 32
 const THUMB_H = 18
 const DARK_CHANNEL = 10
+
+// Timing is in ms, so it behaves the same at 30 or 144 fps.
+const FRAME_REF_MS = 1000 / 60
+const FENCE_TIMEOUT_MS = 4000 // GPU never answered the readback: rebuild everything
+const BLACK_REHOOK_MS = 2500 // black this long means the hook dropped: bind it again
+const REHOOK_GAP_MS = 4000
+const FLASH_HOLD_MS = 800 // longest dark transition (loading fade, menu) hidden behind the last good frame
+const FLASH_DARK_JUMP = 0.08 // share of dark pixels above its running average
+const FLASH_MEAN_DROP = 0.55 // brightness below this fraction of its running average
+const FLASH_MIN_MEAN = 26 // about 10%: below it the scene is simply dark, not flashing
+const AVERAGE_HALF_LIFE_MS = 250
+// Gamma luma ~0.46 (linear ~0.18) is where black and white text contrast equally; hysteresis around it.
+const TONE_BRIGHT = 0.52
+const TONE_DARK = 0.4
 const NOOP: GameGlassHandle = { refresh() {}, stop() {} }
 
 const VERT_FULL = `
@@ -183,9 +200,25 @@ uniform float u_refract;
 uniform float u_dispersion;
 uniform float u_specular;
 uniform vec2 u_light;
+uniform float u_shape;
+uniform float u_lens;
+uniform float u_facets;
 float box(vec2 p, vec2 b, float r) {
   vec2 q = abs(p) - b + r;
   return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - r;
+}
+float ndot(vec2 a, vec2 b) { return a.x * b.x - a.y * b.y; }
+float rhombus(vec2 p, vec2 b, float r) {
+  vec2 k = max(b - r * vec2(length(b) / b.y, length(b) / b.x), vec2(1.0));
+  p = abs(p);
+  float h = clamp(ndot(k - 2.0 * p, k) / dot(k, k), -1.0, 1.0);
+  float d = length(p - 0.5 * k * vec2(1.0 - h, 1.0 + h));
+  return d * sign(p.x * k.y + p.y * k.x - k.x * k.y) - r;
+}
+float shape(vec2 p, vec2 b, float r) { return u_shape > 0.5 ? rhombus(p, b, r) : box(p, b, r); }
+vec3 sharpAt(vec2 px, vec2 spread) {
+  return vec3(texture2D(u_sharp, (px + spread) / u_res).r, texture2D(u_sharp, px / u_res).g,
+    texture2D(u_sharp, (px - spread) / u_res).b);
 }
 vec3 grade(vec3 c) {
   float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
@@ -193,28 +226,47 @@ vec3 grade(vec3 c) {
 }
 void main() {
   vec2 hs = u_rect.zw * 0.5;
-  vec2 p = gl_FragCoord.xy - (u_rect.xy + hs);
-  float d = box(p, hs, u_radius);
+  vec2 center = u_rect.xy + hs;
+  vec2 p = gl_FragCoord.xy - center;
+  float d = shape(p, hs, u_radius);
   float a = clamp(0.5 - d, 0.0, 1.0) * u_alpha;
   if (a <= 0.0) discard;
   vec2 frag = gl_FragCoord.xy;
+  vec2 n = normalize(vec2(shape(p + vec2(1.0, 0.0), hs, u_radius) - d, shape(p + vec2(0.0, 1.0), hs, u_radius) - d) + 1e-5);
+  float rim = u_bezel > 0.0 ? 1.0 - clamp(-d / u_bezel, 0.0, 1.0) : 0.0;
+  float size = min(hs.x, hs.y);
+  float seg = 6.2831853 / max(u_facets, 2.0);
+  float ang = atan(p.y, p.x);
+  float r = length(p);
   vec3 c;
-  if (u_bezel > 0.0) {
-    vec2 n = normalize(vec2(box(p + vec2(1.0, 0.0), hs, u_radius) - d, box(p + vec2(0.0, 1.0), hs, u_radius) - d) + 1e-5);
-    float rim = 1.0 - clamp(-d / u_bezel, 0.0, 1.0);
+  if (u_lens > 1.5) {
+    // Kaleidoscope: fold the angle into one mirrored wedge and read the backdrop behind it.
+    float w = abs(mod(ang, seg) - 0.5 * seg);
+    // The wedge points up and reaches past the element, so each slice carries more of the scene.
+    vec2 q = vec2(sin(w), cos(w)) * r * 1.8;
+    c = grade(sharpAt(center + q, vec2(u_dispersion * 3.0, 0.0)));
+  } else if (u_lens > 0.5) {
+    // Gem: a flat table in the middle and angled facets around it, each bending the backdrop its own way.
+    float k = floor(ang / seg + 0.5);
+    vec2 fn = vec2(cos(k * seg), sin(k * seg));
+    float table = 0.42 * size;
+    bool crown = r > table;
+    vec2 off = crown ? fn * u_refract * (0.5 + r / size) : -p * 0.3;
+    c = grade(sharpAt(frag + off, off * u_dispersion * 0.6));
+    c *= crown ? 0.82 + 0.3 * dot(fn, u_light) : 1.06;
+    float edge = crown ? min(abs(fract(ang / seg + 0.5) - 0.5) * seg * r, abs(r - table)) : abs(r - table);
+    c += u_specular * (1.0 - smoothstep(0.0, 1.6, edge)) * 0.9;
+  } else if (u_bezel > 0.0) {
     // Convex bezel: the surface tilts harder toward the rim, so it pulls the backdrop from outside.
     vec2 off = n * pow(rim, 2.2) * u_refract;
-    vec2 spread = off * u_dispersion * 0.3;
-    vec3 sharp = vec3(
-      texture2D(u_sharp, (frag + off + spread) / u_res).r,
-      texture2D(u_sharp, (frag + off) / u_res).g,
-      texture2D(u_sharp, (frag + off - spread) / u_res).b);
     vec3 blur = texture2D(u_blur, (frag + off * 0.5) / u_res).rgb;
-    c = grade(mix(blur, sharp, smoothstep(0.15, 0.85, rim) * 0.9));
-    float lit = max(dot(n, u_light), 0.0) + 0.35 * max(-dot(n, u_light), 0.0);
-    c += u_specular * lit * pow(rim, 7.0);
+    c = grade(mix(blur, sharpAt(frag + off, off * u_dispersion * 0.3), smoothstep(0.15, 0.85, rim) * 0.9));
   } else {
     c = grade(texture2D(u_blur, frag / u_res).rgb);
+  }
+  if (u_bezel > 0.0) {
+    float lit = max(dot(n, u_light), 0.0) + 0.35 * max(-dot(n, u_light), 0.0);
+    c += u_specular * lit * pow(rim, 7.0);
   }
   gl_FragColor = vec4(min(c, 1.0) * a, a);
 }`
@@ -256,13 +308,15 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
   let fallbackSource: TexImageSource | null = null
 
   let fence: WebGLSync | null = null
-  let fenceFrames = 0
+  let fenceStart = 0
   let blurReady = false
   let blurChanged = false
   let lastKey = ''
   let cleared = true
-  let blackFrames = 0
-  let skipped = 0
+  let blackSince = 0
+  let flashSince = 0
+  let lastAccept = 0
+  let lastBlur = 0
   let meanAvg = 0
   let darkAvg = 0
   let lastRehook = 0
@@ -368,7 +422,7 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
       mix: program(g, VERT_FULL, FRAG_MIX, ['u_tex', 'u_prev', 'u_mix'], { u_tex: 0, u_prev: 1 }),
       compose: program(g, VERT_RECT, FRAG_COMPOSE, [
         'u_blur', 'u_sharp', 'u_res', 'u_rect', 'u_radius', 'u_alpha', 'u_sat', 'u_darken',
-        'u_bezel', 'u_refract', 'u_dispersion', 'u_specular', 'u_light',
+        'u_bezel', 'u_refract', 'u_dispersion', 'u_specular', 'u_light', 'u_shape', 'u_lens', 'u_facets',
       ], { u_blur: 0, u_sharp: 1 }),
       game: gameTexture(g),
       thumb: target(g, THUMB_W, THUMB_H),
@@ -433,7 +487,7 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
   }
 
   // Frame goes to sharpNext; it only becomes the visible sharp frame once the readback approves it.
-  function capture(g: WebGL2RenderingContext, res: Resources) {
+  function capture(g: WebGL2RenderingContext, res: Resources, now: number) {
     if (!res.sharpNext || !res.src) return
     down(g, res, res.game, res.sharpNext)
     down(g, res, res.sharpNext.tex, res.src)
@@ -444,7 +498,7 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
     g.bindFramebuffer(g.FRAMEBUFFER, null)
     fence = g.fenceSync(g.SYNC_GPU_COMMANDS_COMPLETE, 0)
     g.flush()
-    fenceFrames = 0
+    fenceStart = now
   }
 
   // Async readback of the 32x18 thumbnail; false while pending or when the frame looks broken.
@@ -452,7 +506,7 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
     if (!fence) return false
     const st = g.clientWaitSync(fence, 0, 0)
     if (st === g.TIMEOUT_EXPIRED) {
-      if (++fenceFrames > 300) rebuild()
+      if (now - fenceStart > FENCE_TIMEOUT_MS) rebuild()
       return false
     }
     g.deleteSync(fence)
@@ -475,29 +529,33 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
     const darkRatio = dark / count
 
     if (dark === count) {
-      if (inGame && ++blackFrames > 180 && now - lastRehook > 5000) {
+      if (!blackSince) blackSince = now
+      if (inGame && now - blackSince > BLACK_REHOOK_MS && now - lastRehook > REHOOK_GAP_MS) {
         g.deleteTexture(res.game)
         res.game = gameTexture(g)
         lastRehook = now
-        blackFrames = 0
+        blackSince = now
       }
       return false
     }
-    blackFrames = 0
-    // Loading screens and transitions flash dark for a few frames; keep the last good blur.
-    const first = meanAvg === 0
-    const flash = !first && (darkRatio > darkAvg + 0.04 || (meanAvg > 20 && mean < meanAvg * 0.65))
-    if (flash && skipped < 45) {
-      skipped++
-      return false
+    blackSince = 0
+    // Loading screens and transitions flash dark for a moment; keep the last good blur meanwhile.
+    const first = lastAccept === 0
+    const flash = !first && (darkRatio > darkAvg + FLASH_DARK_JUMP
+      || (meanAvg > FLASH_MIN_MEAN && mean < meanAvg * FLASH_MEAN_DROP))
+    if (flash) {
+      if (!flashSince) flashSince = now
+      if (now - flashSince < FLASH_HOLD_MS) return false
     }
-    skipped = 0
-    meanAvg = first ? mean : meanAvg * 0.9 + mean * 0.1
-    darkAvg = first ? darkRatio : darkAvg * 0.9 + darkRatio * 0.1
+    flashSince = 0
+    const k = first ? 1 : 1 - 0.5 ** ((now - lastAccept) / AVERAGE_HALF_LIFE_MS)
+    meanAvg += (mean - meanAvg) * k
+    darkAvg += (darkRatio - darkAvg) * k
+    lastAccept = now
     return true
   }
 
-  function blurSource(g: WebGL2RenderingContext, res: Resources) {
+  function blurSource(g: WebGL2RenderingContext, res: Resources, now: number) {
     const { src, ping, pong, histA, histB } = res
     if (!src || !ping || !pong || !histA || !histB) return
     const swap = res.sharp
@@ -520,7 +578,9 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
     if (res.hist && o.temporal < 1) {
       const next = res.hist === histA ? histB : histA
       g.useProgram(res.mix.p)
-      g.uniform1f(res.mix.u.u_mix, o.temporal)
+      // Same smoothing at any frame rate: the 60 fps weight scaled by the real gap since the last blur.
+      const gap = lastBlur ? Math.min(now - lastBlur, 250) : FRAME_REF_MS
+      g.uniform1f(res.mix.u.u_mix, 1 - (1 - o.temporal) ** (gap / FRAME_REF_MS))
       g.activeTexture(g.TEXTURE1)
       g.bindTexture(g.TEXTURE_2D, res.hist.tex)
       pass(g, res.mix, pong.tex, next)
@@ -529,6 +589,7 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
       pass(g, res.copy, pong.tex, histA)
       res.hist = histA
     }
+    lastBlur = now
     blurReady = true
     blurChanged = true
   }
@@ -547,6 +608,9 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
     const d = el.dataset
     const m: Meta = {
       radius: getComputedStyle(el).borderTopLeftRadius,
+      shape: d.glassShape === 'diamond' ? 1 : 0,
+      lensMode: d.glassLens === 'gem' ? 1 : d.glassLens === 'kaleidoscope' ? 2 : 0,
+      facets: num(d.glassFacets),
       liquid: d.glass === 'liquid',
       bezel: num(d.glassBezel),
       refraction: num(d.glassRefraction),
@@ -624,7 +688,7 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
       if (!n) continue
       const luma = sum / n
       const prev = tones.get(el) ?? 'dark'
-      const tone = prev === 'dark' ? (luma > 0.65 ? 'bright' : 'dark') : (luma < 0.55 ? 'dark' : 'bright')
+      const tone = prev === 'dark' ? (luma > TONE_BRIGHT ? 'bright' : 'dark') : (luma < TONE_DARK ? 'dark' : 'bright')
       if (tone !== prev || el.dataset.glassBackdrop !== tone) {
         tones.set(el, tone)
         el.dataset.glassBackdrop = tone
@@ -640,14 +704,17 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
 
   // Liquid look per element; explicit attributes win over the "liquid" preset.
   function lens(m: Meta, rect: DOMRect) {
-    const on = m.liquid || m.bezel !== null || m.refraction !== null
-    if (!on) return { bezel: 0, refract: 0, dispersion: 0, specular: 0 }
+    const facets = m.facets ?? (m.lensMode === 1 ? 8 : 6)
+    const on = m.liquid || m.lensMode > 0 || m.bezel !== null || m.refraction !== null
+    if (!on) return { bezel: 0, refract: 0, dispersion: 0, specular: 0, facets }
+    const fancy = m.liquid || m.lensMode > 0
     const bezel = m.bezel ?? Math.min(28, Math.max(8, Math.min(rect.width, rect.height) * 0.22))
     return {
       bezel,
       refract: m.refraction ?? bezel * 0.8,
-      dispersion: m.dispersion ?? (m.liquid ? 0.5 : 0),
-      specular: m.specular ?? (m.liquid ? 0.45 : 0),
+      dispersion: m.dispersion ?? (fancy ? 0.5 : 0),
+      specular: m.specular ?? (fancy ? 0.45 : 0),
+      facets,
     }
   }
 
@@ -657,7 +724,7 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
     let key = ''
     for (const it of items) {
       const c = it.clip
-      key += `${it.rect.left},${it.rect.top},${it.rect.width},${it.rect.height},${it.alpha.toFixed(3)},${it.m.radius}`
+      key += `${it.rect.left},${it.rect.top},${it.rect.width},${it.rect.height},${it.alpha.toFixed(3)},${it.m.radius},${it.m.shape},${it.m.lensMode}`
       if (c) key += `,${c.left},${c.top},${c.right},${c.bottom}`
       key += ';'
     }
@@ -698,6 +765,9 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
       g.uniform1f(u.u_refract, l.refract * dpr)
       g.uniform1f(u.u_dispersion, l.dispersion)
       g.uniform1f(u.u_specular, l.specular)
+      g.uniform1f(u.u_shape, m.shape)
+      g.uniform1f(u.u_lens, m.lensMode)
+      g.uniform1f(u.u_facets, l.facets)
       g.drawArrays(g.TRIANGLE_STRIP, 0, 4)
     }
     g.disable(g.SCISSOR_TEST)
@@ -732,7 +802,7 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
     }
     cleared = false
     if (fence && readback(g, res, now)) {
-      blurSource(g, res)
+      blurSource(g, res, now)
       if (now - lastTone >= o.toneInterval) {
         lastTone = now
         updateTones(res, items)
@@ -740,7 +810,7 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
     }
     // readback may have rebuilt the context resources
     if (r !== res) return
-    if (!fence && (inGame || fallbackSource)) capture(g, res)
+    if (!fence && (inGame || fallbackSource)) capture(g, res, now)
     if (blurReady) compose(g, res, items)
   }
 
@@ -812,7 +882,8 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
   window.addEventListener('resize', onResize)
   observer.observe(document.body, {
     childList: true, subtree: true, attributes: true,
-    attributeFilter: ['class', 'data-glass', 'data-glass-bezel', 'data-glass-refraction', 'data-glass-dispersion', 'data-glass-specular'],
+    attributeFilter: ['class', 'data-glass', 'data-glass-bezel', 'data-glass-refraction', 'data-glass-dispersion', 'data-glass-specular',
+      'data-glass-shape', 'data-glass-lens', 'data-glass-facets'],
   })
   scan()
 
