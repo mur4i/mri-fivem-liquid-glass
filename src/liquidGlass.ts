@@ -111,6 +111,9 @@ const DEFAULTS = {
   fallbackImage: null as string | TexImageSource | null,
 }
 
+/** Default value of every option, for tools and docs. */
+export const GLASS_DEFAULTS: Readonly<typeof DEFAULTS> = Object.freeze({ ...DEFAULTS })
+
 const THUMB_W = 32
 const THUMB_H = 18
 const DARK_CHANNEL = 10
