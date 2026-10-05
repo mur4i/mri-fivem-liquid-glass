@@ -1,6 +1,13 @@
 # Para agentes de IA
 
-Este projeto foi feito pra ser usado e melhorado por agentes de IA tanto quanto por pessoas.
+Este projeto foi feito pra ser usado e melhorado por agentes de IA tanto quanto por pessoas. Três
+passos e o seu agente conhece a biblioteca inteira:
+
+<ClientOnly><AiOnboarding lang="pt" /></ClientOnly>
+
+O `setup-ai` escreve a skill da biblioteca onde cada agente procura (`.claude/skills/`,
+`AGENTS.md`, `.cursor/rules/`, `.github/copilot-instructions.md`). Rodar de novo atualiza o mesmo
+bloco, sem duplicar. Sem `--agent`, ele detecta os agentes que o projeto já usa.
 
 ## Usando a biblioteca com um agente
 

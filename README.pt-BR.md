@@ -9,7 +9,7 @@ enxerga: ela desfoca e refrata o frame do GTA V, ao vivo, atrás dos seus elemen
 
 **[Documentação](https://mur4i.github.io/mri-fivem-liquid-glass/pt/guide/) · [Playground](https://mur4i.github.io/mri-fivem-liquid-glass/playground) · [Vídeo](https://www.youtube.com/watch?v=W2z3DP6N95c) · [Presets](https://mur4i.github.io/mri-fivem-liquid-glass/presets) · [Vitrine](https://mur4i.github.io/mri-fivem-liquid-glass/showcase) · [API JSON](https://mur4i.github.io/mri-fivem-liquid-glass/api) · [English](README.md)**
 
-![Liquid glass, um diamante lapidado e um caleidoscópio sobre o GTA V no jogo](docs/assets/hero.webp)
+![Liquid glass, um diamante lapidado e um caleidoscópio sobre o GTA V no jogo](docs/public/hero.webp)
 
 </div>
 
@@ -17,8 +17,8 @@ enxerga: ela desfoca e refrata o frame do GTA V, ao vivo, atrás dos seus elemen
 
 Interface de vidro fica linda no navegador comum e vira caixa lisa e opaca no FiveM: o jogo não
 faz parte da página, ele é composto por baixo depois, então o `backdrop-filter` não tem o que
-desfocar. Resources pagos contornam isso com código fechado. Esta é a versão aberta e
-documentada.
+desfocar. Esta biblioteca traz o frame do jogo, ao vivo, pra dentro da página e desenha o vidro
+pra você, pronta pra telas de produção.
 
 - **Vidro fosco**: o jogo desfocado atrás de qualquer elemento, seguindo o `border-radius`.
 - **Liquid glass**: borda em bisel que entorta a imagem nítida do jogo, com separação de cor e
@@ -164,7 +164,13 @@ Mande seus números numa issue.
 
 ## Para agentes de IA
 
-Usando esta biblioteca com um agente de IA? O pacote traz uma skill pronta em
+Usando esta biblioteca com um agente de IA? Um comando ensina a biblioteca inteira pra ele:
+
+```bash
+npx mri-fivem-liquid-glass setup-ai   # Claude Code, Codex (AGENTS.md), Cursor, Copilot
+```
+
+Veja o [onboarding interativo](https://mur4i.github.io/mri-fivem-liquid-glass/pt/guide/ai). O pacote também traz uma skill pronta em
 `skills/mri-fivem-liquid-glass/SKILL.md`, o site tem o [`llms.txt`](https://mur4i.github.io/mri-fivem-liquid-glass/llms.txt) e uma
 [API em JSON](https://mur4i.github.io/mri-fivem-liquid-glass/api), e o [AGENTS.md](AGENTS.md) explica como buildar e testar.
 

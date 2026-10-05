@@ -86,6 +86,7 @@ export default defineConfig({
       themeConfig: {
         nav: [
           { text: 'Guide', link: '/guide/' },
+          { text: 'AI', link: '/guide/ai' },
           { text: 'Playground', link: '/playground' },
           { text: 'Presets', link: '/presets' },
           { text: 'Showcase', link: '/showcase' },
@@ -101,6 +102,7 @@ export default defineConfig({
       themeConfig: {
         nav: [
           { text: 'Guia', link: '/pt/guide/' },
+          { text: 'IA', link: '/pt/guide/ai' },
           { text: 'Playground', link: '/playground' },
           { text: 'Presets', link: '/presets' },
           { text: 'Vitrine', link: '/showcase' },

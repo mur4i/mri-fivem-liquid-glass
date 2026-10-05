@@ -14,7 +14,7 @@ it blurs and refracts the live GTA V frame behind your HTML elements.
 
 **[Documentation](https://mur4i.github.io/mri-fivem-liquid-glass/guide/) · [Playground](https://mur4i.github.io/mri-fivem-liquid-glass/playground) · [Video](https://www.youtube.com/watch?v=W2z3DP6N95c) · [Presets](https://mur4i.github.io/mri-fivem-liquid-glass/presets) · [Showcase](https://mur4i.github.io/mri-fivem-liquid-glass/showcase) · [JSON API](https://mur4i.github.io/mri-fivem-liquid-glass/api) · [Português](README.pt-BR.md)**
 
-![Liquid glass, a faceted diamond and a kaleidoscope over GTA V in game](docs/assets/hero.webp)
+![Liquid glass, a faceted diamond and a kaleidoscope over GTA V in game](docs/public/hero.webp)
 
 </div>
 
@@ -22,7 +22,8 @@ it blurs and refracts the live GTA V frame behind your HTML elements.
 
 Glass UIs look great in a normal browser and turn into flat, solid boxes in FiveM: the game is
 not part of the page, it is composited underneath afterwards, so `backdrop-filter` has nothing
-to blur. Paid resources work around it with closed code. This is the open, documented version.
+to blur. This library brings the live game frame into the page and draws the glass for you,
+ready for production screens.
 
 - **Frosted glass**: the game blurred behind any element, following its `border-radius`.
 - **Liquid glass**: a bevelled rim that bends the sharp game image, with color split and a
@@ -169,7 +170,13 @@ elements. Share your numbers in an issue.
 
 ## For AI agents
 
-Using this library from an AI coding agent? The package ships a ready skill at
+Using this library from an AI coding agent? One command teaches it the whole library:
+
+```bash
+npx mri-fivem-liquid-glass setup-ai   # Claude Code, Codex (AGENTS.md), Cursor, Copilot
+```
+
+See the [interactive onboarding](https://mur4i.github.io/mri-fivem-liquid-glass/guide/ai). The package also ships a ready skill at
 `skills/mri-fivem-liquid-glass/SKILL.md`, the site serves [`llms.txt`](https://mur4i.github.io/mri-fivem-liquid-glass/llms.txt) and a
 [JSON API](https://mur4i.github.io/mri-fivem-liquid-glass/api), and [AGENTS.md](AGENTS.md) explains how to build and test.
 

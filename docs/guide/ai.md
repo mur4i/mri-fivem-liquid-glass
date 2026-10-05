@@ -1,6 +1,13 @@
 # For AI agents
 
-This project is built to be used and improved by AI coding agents as much as by people.
+This project is built to be used and improved by AI coding agents as much as by people. Three
+steps and your agent knows the whole library:
+
+<ClientOnly><AiOnboarding /></ClientOnly>
+
+`setup-ai` writes the library skill where each agent looks for it (`.claude/skills/`, `AGENTS.md`,
+`.cursor/rules/`, `.github/copilot-instructions.md`). Running it again updates the same block
+instead of duplicating it. Without `--agent` it detects the agents already used in the project.
 
 ## Using the library from an agent
 

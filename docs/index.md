@@ -15,6 +15,9 @@ hero:
       text: Get started
       link: /guide/getting-started
     - theme: alt
+      text: Let your AI build it
+      link: /guide/ai
+    - theme: alt
       text: Open the playground
       link: /playground
     - theme: alt
