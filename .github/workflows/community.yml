@@ -1,0 +1,31 @@
+name: Community
+
+# Labels pull requests by area and greets first-time contributors. Never checks out PR code.
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  label:
+    if: github.event_name == 'pull_request_target'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/labeler@v7
+
+  welcome:
+    if: github.event.action == 'opened'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/first-interaction@v3
+        with:
+          issue_message: |
+            Thanks for opening your first issue here! A screenshot or short video, the library version and your GPU help a lot. Obrigado pela primeira issue, pode escrever em português também.
+          pr_message: |
+            Thanks for your first pull request! CI checks it in a few minutes. Docs, examples, presets and showcase entries merge by themselves when CI passes; library code gets a quick review from @mur4i. Obrigado pelo primeiro PR!

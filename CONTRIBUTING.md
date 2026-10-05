@@ -12,18 +12,22 @@ Thanks for helping. Issues and pull requests in English or Portuguese are both f
 ## Development
 
 ```bash
-npm install
-npm run build      # dist/: ESM + types + single-file IIFE
-npm run dev        # demo on http://127.0.0.1:5180 (uses dist/, rebuild after changes)
-npm test           # headless Chrome visual test (needs Google Chrome)
+npm ci
 npm run typecheck
+npm run build        # dist/: ESM, types, single-file IIFE
+npm run validate     # community registry
+npm run docs:dev     # site with the playground on http://localhost:5173/mri-fivem-liquid-glass/
+npm run docs:build   # build + JSON API + site
+npm test             # headless Chrome visual test of the built playground (needs Google Chrome)
 ```
 
-Outside the game there is no game frame: the demo uses a game screenshot (`site/scene.webp`) through
-`fallbackImage`. You can drop a real GTA screenshot on the demo page.
+Outside the game there is no game frame: the playground uses a game screenshot
+(`docs/public/scene.webp`) through `fallbackImage`, and you can drop your own screenshot on it.
 
 **The browser is not the game.** Anything touching the hook, timing, black frames or
 performance must also be tested in FiveM. Say in the pull request what you checked where.
+
+AI agents: read [AGENTS.md](AGENTS.md).
 
 ## Code rules
 
@@ -43,13 +47,10 @@ minor release, `feat!:` or a `BREAKING CHANGE:` footer a major release.
 
 One topic per pull request. CI (typecheck, build, visual test) must pass.
 
-## Maintainers: first npm release
+## Maintainers
 
-Trusted publishing can only be set up on a package that already exists:
-
-1. Make the repository public. The Release workflow creates the first version and tag.
-2. `git pull`, `npm login`, `npm run build`, `npm publish` once by hand.
-3. On npmjs.com, package Settings, Trusted publisher: GitHub Actions, repository
-   `mur4i/mri-fivem-liquid-glass`, workflow `publish.yml`.
-
-From then on every release publishes itself with provenance.
+- Releases: every `fix:` or `feat:` on `main` creates a tag and a GitHub release (no commit back
+  to `main`), then `publish.yml` publishes that tag to npm through trusted publishing.
+- Merging: CI must pass. Pull requests that only touch `docs/`, `registry/`, `examples/` or root
+  Markdown merge by themselves (`automerge.yml`); everything else needs a review from @mur4i
+  (`CODEOWNERS`).

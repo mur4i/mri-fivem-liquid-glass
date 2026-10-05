@@ -1,0 +1,8 @@
+# Library code, build, tests and automation need a review from the owner.
+# docs/, registry/, examples/ and root Markdown merge by themselves when CI passes (see automerge.yml).
+/src/ @mur4i
+/scripts/ @mur4i
+/test/ @mur4i
+/.github/ @mur4i
+/tsconfig*.json @mur4i
+/.releaserc.json @mur4i

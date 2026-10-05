@@ -1,0 +1,31 @@
+name: Add my project to the showcase
+description: Using liquid glass on a server or resource? Get listed on the site.
+labels: [registry]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The fastest way is a pull request with one file in `registry/showcase/` (see the [guide](https://mur4i.github.io/mri-fivem-liquid-glass/guide/contributing#registry-pull-requests)): it merges by itself when valid. Prefer an issue? Fill this in and a maintainer adds it.
+  - type: input
+    id: name
+    attributes:
+      label: Project name
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Link (site, video, Tebex, repo...)
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Short description (up to 200 characters)
+    validations:
+      required: true
+  - type: textarea
+    id: image
+    attributes:
+      label: Screenshot
+      description: Drag an in-game screenshot here.

@@ -3,6 +3,10 @@ name: Pages
 on:
   push:
     branches: [main]
+  # After a release the tag exists, so the site and the API show the new version.
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -16,7 +20,6 @@ concurrency:
 
 jobs:
   deploy:
-    # GitHub Pages for a private repository needs a paid plan.
     if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     environment:
@@ -24,6 +27,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
 
       - uses: actions/setup-node@v7
         with:
@@ -32,16 +38,13 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run build
-
-      # The demo imports ./lib/, which the dev server maps to dist/.
-      - run: cp -r dist site/lib
+      - run: npm run docs:build
 
       - uses: actions/configure-pages@v6
 
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: site
+          path: docs/.vitepress/dist
 
       - id: deployment
         uses: actions/deploy-pages@v5

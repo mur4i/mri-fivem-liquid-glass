@@ -16,10 +16,10 @@ jobs:
       contents: read
       id-token: write
     steps:
-      # main, not the triggering commit: the version bump lands in the release commit after it.
       - uses: actions/checkout@v7
         with:
           ref: main
+          fetch-depth: 0
 
       # No registry-url: it writes an .npmrc that expects a token and breaks OIDC.
       - uses: actions/setup-node@v7
@@ -32,19 +32,21 @@ jobs:
 
       - run: npm ci
 
-      - name: Skip if already published
-        id: check
+      # Releases do not commit the version: the latest tag is the version to publish.
+      - name: Version from the latest tag
+        id: version
         run: |
+          VERSION=$(git describe --tags --abbrev=0 --match 'v*' | sed 's/^v//')
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
           NAME=$(node -p "require('./package.json').name")
-          VERSION=$(node -p "require('./package.json').version")
           if npm view "$NAME@$VERSION" version > /dev/null 2>&1; then
             echo "published=true" >> "$GITHUB_OUTPUT"
           else
             echo "published=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - if: steps.check.outputs.published == 'false'
+      - if: steps.version.outputs.published == 'false'
         run: npm run build
 
-      - if: steps.check.outputs.published == 'false'
+      - if: steps.version.outputs.published == 'false'
         run: npm publish

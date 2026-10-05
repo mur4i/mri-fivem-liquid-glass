@@ -1,0 +1,69 @@
+name: Auto-merge
+
+# Merges safe pull requests once CI passed: only docs/, registry/, examples/ and root Markdown files,
+# or npm updates from Dependabot. It never checks out or runs the pull request code; it only reads
+# the list of changed files through the API. Library code always waits for a human review.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  merge:
+    if: ${{ github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - name: Find the pull request
+        id: pr
+        run: |
+          NUMBER=$(gh pr list --state open --search "$HEAD_SHA" --json number,headRefOid \
+            --jq ".[] | select(.headRefOid == \"$HEAD_SHA\") | .number" | head -n1)
+          echo "number=$NUMBER" >> "$GITHUB_OUTPUT"
+
+      - name: Decide
+        id: decide
+        if: steps.pr.outputs.number != ''
+        env:
+          NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          INFO=$(gh pr view "$NUMBER" --json author,isDraft,files,headRefOid)
+          if [ "$(echo "$INFO" | jq -r .isDraft)" = "true" ]; then echo "safe=false" >> "$GITHUB_OUTPUT"; exit 0; fi
+          # The head must still be the commit that CI checked.
+          if [ "$(echo "$INFO" | jq -r .headRefOid)" != "$HEAD_SHA" ]; then echo "safe=false" >> "$GITHUB_OUTPUT"; exit 0; fi
+          AUTHOR=$(echo "$INFO" | jq -r .author.login)
+          FILES=$(echo "$INFO" | jq -r '.files[].path')
+          SAFE=true
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            case "$f" in
+              docs/*|registry/*|examples/*) ;;
+              */*) if [ "$AUTHOR" = "app/dependabot" ] && { [ "$f" = "package.json" ] || [ "$f" = "package-lock.json" ]; }; then :; else SAFE=false; fi ;;
+              *.md) ;;
+              package.json|package-lock.json) [ "$AUTHOR" = "app/dependabot" ] || SAFE=false ;;
+              *) SAFE=false ;;
+            esac
+          done <<< "$FILES"
+          echo "Author: $AUTHOR, safe: $SAFE"
+          echo "safe=$SAFE" >> "$GITHUB_OUTPUT"
+
+      - name: Merge
+        if: steps.decide.outputs.safe == 'true'
+        env:
+          NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          gh pr edit "$NUMBER" --add-label auto-merged || true
+          gh pr merge "$NUMBER" --squash --delete-branch --match-head-commit "$HEAD_SHA"
+
+      # Merges made with this token do not trigger push workflows; dispatch is the one exception.
+      - name: Redeploy the site
+        if: steps.decide.outputs.safe == 'true'
+        run: gh workflow run pages.yml --ref main

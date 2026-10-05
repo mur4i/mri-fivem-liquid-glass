@@ -1,0 +1,25 @@
+name: Share a preset
+description: A glass look worth sharing.
+labels: [registry]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Easiest: tune it in the [Playground](https://mur4i.github.io/mri-fivem-liquid-glass/playground), press "get code", and open a pull request with one file in `registry/presets/`. Or paste it here.
+  - type: input
+    id: name
+    attributes:
+      label: Preset name
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: Code from the playground
+      render: html
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What it looks like and where it fits

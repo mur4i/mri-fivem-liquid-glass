@@ -7,7 +7,6 @@ on:
 
 jobs:
   release:
-    # Stays off while the repository is private.
     if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     permissions:
@@ -26,9 +25,7 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run build
-
-      # Versions, changelog, tag and GitHub release. npm publishing is publish.yml.
+      # Tag and GitHub release only; nothing is committed back to main. publish.yml ships to npm.
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

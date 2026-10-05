@@ -62,8 +62,6 @@
     "access": "public"
   },
   "devDependencies": {
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/git": "^10.0.1",
     "esbuild": "^0.25.0",
     "semantic-release": "^24.2.0",
     "typescript": "^5.6.0",
