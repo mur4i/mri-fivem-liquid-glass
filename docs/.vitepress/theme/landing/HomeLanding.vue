@@ -2,315 +2,342 @@
 import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { withBase } from 'vitepress'
 import { startGameGlass, type GameGlassHandle } from '../../../../src/index'
-import { createCity, type City } from './city'
+import { createHero, type Hero } from './hero'
 import { copy, type Lang } from './copy'
 
 const props = defineProps<{ lang?: Lang }>()
 const c = copy[props.lang ?? 'en']
 const base = props.lang === 'pt' ? '/pt' : ''
 
-const sky = ref<HTMLCanvasElement>()
+const canvas = ref<HTMLCanvasElement>()
+const heroEl = ref<HTMLElement>()
+const lensEl = ref<HTMLElement>()
+const lens = reactive({ x: 0.79, y: 0.56, tx: 0.79, ty: 0.56 })
+const modes = ['liquid', 'gem', 'kaleidoscope'] as const
+const mode = ref(0)
 const split = ref(50)
-const compare = ref<HTMLElement>()
-const gem = reactive({ x: 0, y: 0 })
-const copied = ref(false)
-let city: City | null = null
-let glass: GameGlassHandle | null = null
+const promptCopied = ref(false)
 
-function onScroll() {
-  const max = document.documentElement.scrollHeight - innerHeight
-  city?.setScroll(max > 0 ? scrollY / max : 0)
+async function copyPrompt() {
+  await navigator.clipboard.writeText(c.prompt)
+  promptCopied.value = true
+  setTimeout(() => { promptCopied.value = false }, 1600)
+}
+let hero: Hero | null = null
+let glass: GameGlassHandle | null = null
+let raf = 0
+let visible = true
+let observer: IntersectionObserver | null = null
+
+function lensAttrs() {
+  const m = modes[mode.value]
+  return {
+    'data-glass': 'liquid',
+    'data-glass-bezel': m === 'liquid' ? '120' : '40',
+    'data-glass-refraction': m === 'liquid' ? '72' : '34',
+    'data-glass-dispersion': '0.85',
+    'data-glass-specular': '0.65',
+    ...(m === 'gem' ? { 'data-glass-shape': 'diamond', 'data-glass-lens': 'gem' } : {}),
+    ...(m === 'kaleidoscope' ? { 'data-glass-lens': 'kaleidoscope', 'data-glass-facets': '8' } : {}),
+  }
+}
+
+function cycleLens() {
+  mode.value = (mode.value + 1) % modes.length
+  // The corner radius animates; read the final shape once the transition is over.
+  requestAnimationFrame(() => glass?.refresh())
+  setTimeout(() => glass?.refresh(), 560)
+}
+
+// The lens trails the pointer with a soft spring, only while the hero is on screen.
+function tick() {
+  raf = requestAnimationFrame(tick)
+  if (!visible) return
+  lens.x += (lens.tx - lens.x) * 0.08
+  lens.y += (lens.ty - lens.y) * 0.08
 }
 
 function onPointer(e: PointerEvent) {
-  city?.setPointer(e.clientX / innerWidth * 2 - 1, e.clientY / innerHeight * 2 - 1)
+  const box = heroEl.value?.getBoundingClientRect()
+  if (!box || e.clientY > box.bottom) return
+  const nx = e.clientX / innerWidth
+  const ny = (e.clientY - box.top) / box.height
+  hero?.setPointer(nx * 2 - 1, ny * 2 - 1)
+  if (innerWidth > 900) {
+    lens.tx = 0.62 + nx * 0.26
+    lens.ty = 0.36 + ny * 0.36
+  }
+}
+
+// The site runs in a normal browser, so the header uses CSS backdrop-filter; it turns solid past the hero.
+function onScroll() {
+  const pastHero = scrollY > (heroEl.value?.offsetHeight ?? innerHeight) - 80
+  document.documentElement.classList.toggle('mri-landing-scrolled', pastHero)
 }
 
 function dragSplit(e: PointerEvent) {
-  const box = compare.value
-  if (!box) return
-  ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
-  const move = (ev: PointerEvent) => {
-    const r = box.getBoundingClientRect()
-    split.value = Math.min(92, Math.max(8, ((ev.clientX - r.left) / r.width) * 100))
-  }
-  move(e)
-  const target = e.target as HTMLElement
-  target.addEventListener('pointermove', move)
-  target.addEventListener('pointerup', () => target.removeEventListener('pointermove', move), { once: true })
-}
-
-function dragGem(e: PointerEvent) {
   const el = e.currentTarget as HTMLElement
+  const box = el.parentElement!.getBoundingClientRect()
   el.setPointerCapture(e.pointerId)
-  const sx = e.clientX - gem.x
-  const sy = e.clientY - gem.y
-  const move = (ev: PointerEvent) => { gem.x = ev.clientX - sx; gem.y = ev.clientY - sy }
+  const move = (ev: PointerEvent) => { split.value = Math.min(96, Math.max(4, ((ev.clientX - box.left) / box.width) * 100)) }
+  move(e)
   el.addEventListener('pointermove', move)
   el.addEventListener('pointerup', () => el.removeEventListener('pointermove', move), { once: true })
 }
 
-async function copyInstall() {
-  await navigator.clipboard.writeText('npm i mri-fivem-liquid-glass')
-  copied.value = true
-  setTimeout(() => { copied.value = false }, 1400)
+function keySplit(e: KeyboardEvent) {
+  if (e.key === 'ArrowLeft') split.value = Math.max(4, split.value - 5)
+  if (e.key === 'ArrowRight') split.value = Math.min(96, split.value + 5)
 }
 
 onMounted(() => {
   document.documentElement.classList.add('mri-landing')
-  const canvas = sky.value!
-  city = createCity(canvas)
-  if (city) {
-    glass = startGameGlass({ fallbackImage: canvas, zIndex: 1, blur: 16, saturation: 1.2 })
-  } else {
-    // No WebGL for the city: a real in-game frame stands in, still behind real glass.
-    const img = new Image()
-    img.onload = () => {
-      canvas.width = innerWidth
-      canvas.height = innerHeight
-      const k = Math.max(innerWidth / img.width, innerHeight / img.height)
-      canvas.getContext('2d')!.drawImage(img, (innerWidth - img.width * k) / 2, (innerHeight - img.height * k) / 2, img.width * k, img.height * k)
-      glass = startGameGlass({ fallbackImage: canvas, zIndex: 1, blur: 16 })
-    }
-    img.src = withBase('/scene.webp')
+  if (!document.getElementById('archivo-font')) {
+    const link = document.createElement('link')
+    link.id = 'archivo-font'
+    link.rel = 'stylesheet'
+    link.href = 'https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap'
+    document.head.append(link)
   }
-  addEventListener('scroll', onScroll, { passive: true })
+  // rAF callbacks run in registration order: move the lens before the glass reads its rect, so they never drift apart.
+  tick()
+  hero = createHero(canvas.value!, withBase('/scene.webp'))
+  glass = startGameGlass({ fallbackImage: canvas.value!, zIndex: 1, blur: 8, saturation: 1.15 })
+  observer = new IntersectionObserver(([entry]) => {
+    visible = entry.isIntersecting
+    hero?.setActive(visible)
+  })
+  observer.observe(heroEl.value!)
   addEventListener('pointermove', onPointer, { passive: true })
+  addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
 })
 
 onBeforeUnmount(() => {
-  document.documentElement.classList.remove('mri-landing')
-  removeEventListener('scroll', onScroll)
+  document.documentElement.classList.remove('mri-landing', 'mri-landing-scrolled')
+  cancelAnimationFrame(raf)
+  observer?.disconnect()
   removeEventListener('pointermove', onPointer)
+  removeEventListener('scroll', onScroll)
   glass?.stop()
-  city?.dispose()
+  hero?.dispose()
 })
 </script>
 
 <template>
   <div class="landing">
-    <canvas ref="sky" class="sky" aria-hidden="true" />
-    <div class="shade" aria-hidden="true" />
+    <canvas ref="canvas" class="backdrop" aria-hidden="true" />
 
-    <section class="hero wrap">
-      <div class="hero-text">
-        <p class="eyebrow">{{ c.eyebrow }}</p>
-        <h1><span>{{ c.title1 }}</span><span class="grad">{{ c.title2 }}</span></h1>
+    <section ref="heroEl" class="hero">
+      <div class="hero-copy">
+        <h1>{{ c.title }}</h1>
         <p class="lead">{{ c.lead }}</p>
-        <div class="ctas">
-          <a class="pill primary" data-glass="liquid" :href="withBase(`${base}/guide/getting-started`)">{{ c.ctaStart }}</a>
-          <a class="pill" data-glass="liquid" :href="withBase(`${base}/guide/ai`)">{{ c.ctaAi }}</a>
-          <a class="pill" data-glass="liquid" :href="withBase('/playground')">{{ c.ctaPlay }}</a>
+        <div class="actions">
+          <a class="btn primary" :href="withBase(`${base}/guide/getting-started`)">{{ c.start }}</a>
+          <a class="btn ghost" href="https://www.youtube.com/watch?v=W2z3DP6N95c" target="_blank" rel="noopener">{{ c.watch }}</a>
         </div>
-        <p class="live"><span class="dot" />{{ c.live }}</p>
       </div>
+      <button
+        ref="lensEl"
+        :class="['lens', `lens-${modes[mode]}`]"
+        v-bind="lensAttrs()"
+        :style="{ left: `${lens.x * 100}%`, top: `${lens.y * 100}%` }"
+        :aria-label="c.lens"
+        @click="cycleLens"
+      />
+      <p class="lens-note">{{ c.lens }}</p>
+    </section>
 
-      <div class="mock" aria-hidden="true">
-        <div class="inv" data-glass>
-          <div class="inv-head"><strong>{{ c.hudTitle }}</strong><span>{{ c.hudWeight }}</span></div>
-          <div class="bar"><i /></div>
-          <div class="slots">
-            <div v-for="n in 9" :key="n" class="slot" data-glass="liquid"><b>{{ ['W', 'B', 'K', 'P', 'M', 'R', 'L', 'C', 'D'][n - 1] }}</b><small>x{{ n }}</small></div>
+    <div class="page">
+      <section class="band">
+        <h2>{{ c.inGameTitle }}</h2>
+        <div class="stills">
+          <figure class="still big">
+            <img :src="withBase('/stills/sun-gem.webp')" :alt="c.stills[0][0]" loading="lazy">
+            <figcaption><strong>{{ c.stills[0][0] }}.</strong> {{ c.stills[0][1] }}</figcaption>
+          </figure>
+          <figure class="still">
+            <img :src="withBase('/stills/gem-city.webp')" :alt="c.stills[1][0]" loading="lazy">
+            <figcaption><strong>{{ c.stills[1][0] }}.</strong> {{ c.stills[1][1] }}</figcaption>
+          </figure>
+          <figure class="still">
+            <img :src="withBase('/stills/kaleido-trees.webp')" :alt="c.stills[2][0]" loading="lazy">
+            <figcaption><strong>{{ c.stills[2][0] }}.</strong> {{ c.stills[2][1] }}</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="band why">
+        <div class="why-text">
+          <h2>{{ c.whyTitle.split('backdrop-filter')[0] }}<span class="nowrap">backdrop-filter</span>{{ c.whyTitle.split('backdrop-filter')[1] }}</h2>
+          <p v-for="(t, i) in c.whyText" :key="i">{{ t }}</p>
+        </div>
+        <div class="compare">
+          <img :src="withBase('/compare/after.webp')" :alt="c.after" loading="lazy">
+          <img class="before" :src="withBase('/compare/before.webp')" :alt="c.before" loading="lazy" :style="{ clipPath: `inset(0 ${100 - split}% 0 0)` }">
+          <span class="tag left">{{ c.before }}</span>
+          <span class="tag right">{{ c.after }}</span>
+          <button
+            class="handle"
+            role="slider"
+            :aria-valuenow="Math.round(split)"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            :aria-label="`${c.before} / ${c.after}`"
+            :style="{ left: `${split}%` }"
+            @pointerdown="dragSplit"
+            @keydown="keySplit"
+          />
+        </div>
+      </section>
+
+      <section class="band use">
+        <h2>{{ c.useTitle }}</h2>
+        <pre class="code"><code><span class="k">import</span> { startGameGlass } <span class="k">from</span> <span class="s">'mri-fivem-liquid-glass'</span>
+startGameGlass()
+&lt;div <span class="a">data-glass</span>=<span class="s">"liquid"</span>&gt;...&lt;/div&gt;</code></pre>
+        <div class="prompt">
+          <p class="prompt-label">{{ c.promptLabel }}</p>
+          <div class="prompt-row">
+            <code>{{ c.prompt }}</code>
+            <button class="btn primary small" @click="copyPrompt">{{ promptCopied ? c.copied : c.copy }}</button>
           </div>
         </div>
-        <div class="speed" data-glass="liquid"><strong>128</strong><span>km/h</span></div>
-        <div class="gem" data-glass="liquid" data-glass-shape="diamond" data-glass-lens="gem" :style="{ transform: `translate(${gem.x}px, ${gem.y}px)` }" @pointerdown="dragGem" />
-        <div class="kaleido" data-glass="liquid" data-glass-lens="kaleidoscope" data-glass-facets="8"><span>{{ c.kaleido }}</span></div>
-      </div>
-    </section>
+        <p class="note">{{ c.useNote }} <code>npx mri-fivem-liquid-glass setup-ai</code> <a :href="withBase(`${base}/guide/ai`)">{{ c.aiLink }}</a></p>
+      </section>
 
-    <section class="wrap block">
-      <div class="head">
-        <h2>{{ c.problemTitle }}</h2>
-        <p>{{ c.problemText }}</p>
-      </div>
-      <div ref="compare" class="compare">
-        <div class="side flat" :style="{ width: `${split}%` }">
-          <div class="ui"><strong>{{ c.before }}</strong><span>{{ c.beforeNote }}</span><i /><i /><i /></div>
+      <section class="band proof">
+        <p>{{ c.proof }} <a :href="withBase(`${base}/guide/performance`)">{{ c.proofLink }}</a></p>
+      </section>
+
+      <section class="band end">
+        <h2>{{ c.endTitle }}</h2>
+        <p>{{ c.endText }}</p>
+        <div class="actions">
+          <a class="btn primary" :href="withBase(`${base}/guide/`)">{{ c.docs }}</a>
+          <a class="btn ghost" :href="withBase('/playground')">{{ c.playground }}</a>
+          <a class="btn ghost" href="https://github.com/mur4i/mri-fivem-liquid-glass">GitHub</a>
         </div>
-        <div class="side real" data-glass :style="{ left: `${split}%`, width: `${100 - split}%` }">
-          <div class="ui"><strong>{{ c.after }}</strong><span>{{ c.afterNote }}</span><i /><i /><i /></div>
-        </div>
-        <button class="handle" :style="{ left: `${split}%` }" aria-label="Compare" @pointerdown="dragSplit"><span /></button>
-      </div>
-    </section>
-
-    <section class="wrap block">
-      <div class="head"><h2>{{ c.forTitle }}</h2><p>{{ c.forText }}</p></div>
-      <div class="grid three">
-        <article v-for="(u, i) in c.uses" :key="i" class="card" data-glass>
-          <span class="icon" data-glass="liquid">{{ i + 1 }}</span>
-          <h3>{{ u[0] }}</h3>
-          <p>{{ u[1] }}</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="wrap block">
-      <div class="head"><h2>{{ c.howTitle }}</h2></div>
-      <div class="grid four steps">
-        <article v-for="(h, i) in c.how" :key="i" class="card" data-glass>
-          <span class="num" data-glass="liquid">{{ i + 1 }}</span>
-          <h3>{{ h[0] }}</h3>
-          <p>{{ h[1] }}</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="wrap block">
-      <div class="head"><h2>{{ c.startTitle }}</h2><p>{{ c.startText }}</p></div>
-      <div class="grid two">
-        <article class="card code" data-glass>
-<pre><span class="k">npm</span> i mri-fivem-liquid-glass
-
-<span class="k">import</span> { startGameGlass } <span class="k">from</span> <span class="s">'mri-fivem-liquid-glass'</span>
-startGameGlass()
-
-&lt;div <span class="a">data-glass</span>&gt;Frosted panel&lt;/div&gt;
-&lt;button <span class="a">data-glass</span>=<span class="s">"liquid"</span>&gt;Liquid button&lt;/button&gt;</pre>
-          <button class="pill small" data-glass="liquid" @click="copyInstall">{{ copied ? 'copied' : 'copy install' }}</button>
-        </article>
-        <article class="card ai" data-glass>
-          <h3>{{ c.aiTitle }}</h3>
-          <p>{{ c.aiText }}</p>
-          <code>npx mri-fivem-liquid-glass setup-ai</code>
-          <a class="pill primary" data-glass="liquid" :href="withBase(`${base}/guide/ai`)">{{ c.aiLink }}</a>
-        </article>
-      </div>
-    </section>
-
-    <section class="wrap block">
-      <div class="stats">
-        <div v-for="s in c.stats" :key="s[1]" class="stat" data-glass="liquid"><strong>{{ s[0] }}</strong><span>{{ s[1] }}</span></div>
-      </div>
-    </section>
-
-    <section class="wrap block last">
-      <article class="card community" data-glass>
-        <h2>{{ c.communityTitle }}</h2>
-        <p>{{ c.communityText }}</p>
-        <div class="ctas">
-          <a class="pill primary" data-glass="liquid" :href="withBase(`${base}/guide/`)">{{ c.docs }}</a>
-          <a class="pill" data-glass="liquid" :href="withBase('/showcase')">{{ c.showcase }}</a>
-          <a class="pill" data-glass="liquid" :href="withBase('/presets')">{{ c.presets }}</a>
-          <a class="pill" data-glass="liquid" href="https://github.com/mur4i/mri-fivem-liquid-glass">GitHub</a>
-        </div>
-      </article>
-    </section>
+      </section>
+    </div>
   </div>
 </template>
 
 <style>
-html.mri-landing body { background: #07060d; }
+html.mri-landing body { background: #0f1424; }
 html.mri-landing .VPNavBar,
-html.mri-landing .VPNavBar.has-sidebar .content-body,
-html.mri-landing .VPNavBar .divider { background: rgba(7, 6, 13, 0.55) !important; backdrop-filter: blur(14px); }
+html.mri-landing .VPNavBar .content-body,
+html.mri-landing .VPNavBar .divider { background: transparent !important; transition: background 0.3s; }
+html.mri-landing.mri-landing-scrolled .VPNavBar,
+html.mri-landing.mri-landing-scrolled .VPNavBar .content-body { background: rgba(15, 20, 36, 0.72) !important; backdrop-filter: blur(18px) saturate(160%); -webkit-backdrop-filter: blur(18px) saturate(160%); }
+html.mri-landing .VPNavBar .divider { display: none; }
+/* Floating glass header over the hero. */
+html.mri-landing:not(.mri-landing-scrolled) .VPNavBar { --vp-c-text-1: #f3efea; --vp-c-text-2: rgba(243, 239, 234, 0.88); --vp-c-text-3: rgba(243, 239, 234, 0.78); --vp-c-divider: rgba(255, 255, 255, 0.22); }
+html.mri-landing:not(.mri-landing-scrolled) .VPNavBar .wrapper {
+  margin: 10px 16px 0;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(10px) saturate(190%) brightness(1.08);
+  -webkit-backdrop-filter: blur(10px) saturate(190%) brightness(1.08);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -1px 0 rgba(255, 255, 255, 0.08), 0 18px 40px rgba(15, 20, 36, 0.35);
+}
+html.mri-landing .VPNavBar .content-body,
+html.mri-landing .VPNavBar .title { background: transparent !important; border: 0 !important; }
+html.mri-landing:not(.mri-landing-scrolled) .VPNavBar .DocSearch-Button { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); }
+html.mri-landing:not(.mri-landing-scrolled) .VPNavBar .DocSearch-Button .DocSearch-Button-Key { background: rgba(255, 255, 255, 0.12); color: #f3efea; border-color: rgba(255, 255, 255, 0.3); }
+html.mri-landing:not(.mri-landing-scrolled) .VPNavBar .DocSearch-Button .DocSearch-Button-Keys,
+html.mri-landing:not(.mri-landing-scrolled) .VPNavBar .DocSearch-Button .DocSearch-Button-Keys *,
+html.mri-landing:not(.mri-landing-scrolled) .VPNavBar .DocSearch-Button .DocSearch-Button-Placeholder,
+html.mri-landing:not(.mri-landing-scrolled) .VPNavBar .DocSearch-Button .DocSearch-Search-Icon { color: rgba(243, 239, 234, 0.88); }
 html.mri-landing .VPNavBar .title,
 html.mri-landing .VPNavBarMenuLink,
-html.mri-landing .VPNavBar .VPSocialLink { color: rgba(255, 255, 255, 0.86); }
+html.mri-landing .VPNavBar .VPSocialLink { color: #f3efea; }
 </style>
 
 <style scoped>
-.landing { --ink: #fff; --soft: rgba(255, 255, 255, 0.72); color: var(--ink); font-family: var(--vp-font-family-base); }
-/* Layers: city (0) < glass canvas (1, on <body>) < content (2). */
-.sky { position: fixed; inset: 0; z-index: 0; width: 100vw; height: 100vh; display: block; }
-.shade { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(ellipse 70% 80% at 18% 45%, rgba(7, 6, 13, 0.72), transparent 70%), linear-gradient(180deg, transparent 60%, rgba(7, 6, 13, 0.35)); }
-.wrap { position: relative; z-index: 2; max-width: 1180px; margin: 0 auto; padding: 0 28px; }
-[data-glass] {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 24px 60px rgba(0, 0, 0, 0.35);
+.landing {
+  --dusk: #0f1424;
+  --peach: #f2a07b;
+  --lilac: #a99ad6;
+  --paper: #f3efea;
+  --soft: rgba(243, 239, 234, 0.7);
+  --mri: #00e699;
+  font-family: 'Archivo', var(--vp-font-family-base);
+  color: var(--paper);
 }
-[data-glass-backdrop='bright'] { color: #14111c; }
+/* Layers: backdrop (0) < glass canvas (1, on <body>) < content (2). */
+.backdrop { position: fixed; inset: 0; z-index: 0; width: 100vw; height: 100vh; display: block; }
+.hero { position: relative; z-index: 2; height: calc(100vh - var(--vp-nav-height)); min-height: 560px; }
+.hero::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 60% 70% at 12% 92%, rgba(15, 20, 36, 0.82), rgba(15, 20, 36, 0) 70%); }
+.hero-copy { position: absolute; left: max(32px, 5vw); bottom: 9vh; max-width: 640px; }
+h1 { margin: 0; font-size: clamp(46px, 7.2vw, 116px); line-height: 0.92; letter-spacing: -0.02em; font-weight: 850; font-stretch: 125%; text-shadow: 0 6px 40px rgba(15, 20, 36, 0.55); }
+.lead { margin: 22px 0 28px; max-width: 34em; font-size: 18px; line-height: 1.55; color: rgba(243, 239, 234, 0.9); text-shadow: 0 2px 16px rgba(15, 20, 36, 0.7); }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.btn { display: inline-flex; align-items: center; padding: 13px 24px; border-radius: 999px; font-weight: 650; font-size: 15px; text-decoration: none !important; transition: background 0.2s, color 0.2s; }
+.btn.primary { background: var(--mri); color: #08251b !important; }
+.btn.primary:hover { background: #3df0b3; }
+.btn.ghost { color: var(--paper) !important; border: 1px solid rgba(243, 239, 234, 0.4); }
+.btn.ghost:hover { background: rgba(243, 239, 234, 0.12); }
+.btn:focus-visible, .handle:focus-visible, .lens:focus-visible { outline: 3px solid var(--mri); outline-offset: 3px; }
 
-.hero { min-height: calc(100vh - var(--vp-nav-height)); display: grid; grid-template-columns: 1.05fr 0.95fr; align-items: center; gap: 40px; padding-top: 30px; padding-bottom: 60px; }
-.eyebrow { margin: 0 0 18px; font: 700 13px var(--vp-font-family-mono); letter-spacing: 0.08em; color: #7cf5c8; text-shadow: 0 0 18px rgba(0, 230, 153, 0.45); text-transform: uppercase; }
-h1 { margin: 0; font-size: clamp(44px, 6.4vw, 92px); line-height: 0.98; letter-spacing: -0.035em; font-weight: 800; }
-h1 span { display: block; }
-.grad { background: linear-gradient(100deg, #00e699 0%, #7cc4ff 45%, #e3a6ff 85%); -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: 6px; }
-.lead { max-width: 560px; margin: 26px 0 30px; font-size: 19px; line-height: 1.55; color: rgba(255, 255, 255, 0.86); text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6); }
-.ctas { display: flex; flex-wrap: wrap; gap: 12px; }
-.pill { position: relative; display: inline-flex; align-items: center; padding: 13px 22px; border-radius: 999px; font-weight: 650; font-size: 15px; color: #fff !important; text-decoration: none !important; transition: transform 0.15s; }
-.pill:hover { transform: translateY(-2px); }
-.pill.primary { background: rgba(0, 230, 153, 0.22); border-color: rgba(0, 230, 153, 0.55); }
-.pill.small { padding: 8px 16px; font-size: 13px; }
-.live { display: flex; align-items: flex-start; gap: 10px; max-width: 520px; margin-top: 28px; font-size: 13px; color: rgba(255, 255, 255, 0.55); }
-.dot { flex: none; width: 8px; height: 8px; margin-top: 5px; border-radius: 50%; background: #00e699; box-shadow: 0 0 12px #00e699; }
+.lens { position: absolute; width: min(34vw, 360px); aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; cursor: pointer; background: none; border: 0; padding: 0; transition: border-radius 0.5s cubic-bezier(.2, .9, .3, 1.2); }
+.lens-gem { border: 0; border-radius: 4%; box-shadow: none; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.lens-note { position: absolute; right: max(32px, 5vw); bottom: 9vh; z-index: 2; max-width: 280px; margin: 0; font-size: 13px; line-height: 1.5; color: var(--soft); text-align: right; text-shadow: 0 2px 12px rgba(15, 20, 36, 0.8); }
 
-.mock { position: relative; height: 560px; }
-.inv { position: absolute; left: 4%; top: 6%; width: 330px; padding: 18px; border-radius: 26px; }
-.inv-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 15px; }
-.inv-head span { font-size: 12px; color: var(--soft); }
-.bar { height: 5px; margin: 10px 0 14px; border-radius: 9px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
-.bar i { display: block; width: 31%; height: 100%; background: linear-gradient(90deg, #00e699, #7cc4ff); }
-.slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.slot { position: relative; aspect-ratio: 1; border-radius: 16px; display: grid; place-items: center; align-content: center; gap: 2px; }
-.slot b { font-size: 20px; opacity: 0.9; }
-.slot small { font-size: 11px; color: var(--soft); }
-.speed { position: absolute; right: 6%; top: 2%; width: 150px; height: 150px; border-radius: 50%; display: grid; place-items: center; align-content: center; }
-.speed strong { font-size: 40px; line-height: 1; font-weight: 800; }
-.speed span { font-size: 12px; color: var(--soft); }
-.gem { position: absolute; right: 10%; top: 44%; width: 170px; height: 170px; border: 0; border-radius: 6px; box-shadow: none; cursor: grab; touch-action: none; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
-.gem:active { cursor: grabbing; }
-.kaleido { position: absolute; left: 24%; bottom: 0; width: 170px; height: 170px; border-radius: 50%; display: grid; place-items: center; }
-.kaleido span { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255, 255, 255, 0.85); }
+.page { position: relative; z-index: 2; background: var(--dusk); }
+.band { max-width: 1160px; margin: 0 auto; padding: 120px max(32px, 5vw) 0; }
+h2 { margin: 0 0 32px; padding: 0; border: 0; font-size: clamp(30px, 3.8vw, 52px); line-height: 1.02; letter-spacing: -0.015em; font-weight: 800; font-stretch: 118%; color: var(--paper); }
 
-.block { padding-top: 110px; }
-.block.last { padding-bottom: 140px; }
-.head { max-width: 720px; margin-bottom: 32px; }
-h2 { margin: 0 0 10px; padding: 0; border: 0; font-size: clamp(30px, 3.6vw, 48px); line-height: 1.08; letter-spacing: -0.025em; font-weight: 800; color: #fff; }
-.head p { margin: 0; font-size: 18px; line-height: 1.55; color: var(--soft); }
+.stills { display: grid; grid-template-columns: 1.55fr 1fr; grid-template-rows: auto auto; gap: 18px; }
+.still { margin: 0; }
+.still.big { grid-row: span 2; }
+.still img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 14px; }
+.still.big img { aspect-ratio: auto; height: calc(100% - 56px); min-height: 320px; }
+figcaption { margin-top: 10px; font-size: 14px; line-height: 1.5; color: var(--soft); }
+figcaption strong { color: var(--paper); font-weight: 650; }
 
-.compare { position: relative; height: 340px; border-radius: 30px; }
-.side { position: absolute; top: 0; height: 100%; overflow: hidden; }
-.side.flat { left: 0; border-radius: 30px 0 0 30px; background: rgba(150, 150, 160, 0.45); border: 1px solid rgba(255, 255, 255, 0.12); }
-.side.real { border-radius: 0 30px 30px 0; }
-.ui { position: absolute; top: 36px; width: 380px; display: flex; flex-direction: column; gap: 10px; }
-.flat .ui { left: 36px; }
-.real .ui { right: 36px; text-align: right; align-items: flex-end; }
-.ui strong { font-size: 22px; }
-.ui span { color: var(--soft); }
-.ui i { display: block; height: 12px; width: 70%; border-radius: 8px; background: rgba(255, 255, 255, 0.22); }
-.ui i:nth-of-type(2) { width: 52%; }
-.ui i:nth-of-type(3) { width: 61%; }
-.handle { position: absolute; top: 50%; z-index: 3; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; background: #fff; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); cursor: ew-resize; touch-action: none; }
-.handle span { display: block; width: 18px; height: 18px; margin: auto; border-left: 3px solid #14111c; border-right: 3px solid #14111c; }
-.handle::before { content: ''; position: absolute; left: 21px; top: -147px; width: 4px; height: 340px; background: rgba(255, 255, 255, 0.9); z-index: -1; }
+.why { display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 56px; align-items: center; }
+.nowrap { white-space: nowrap; }
+.why h2 { font-size: clamp(28px, 3vw, 42px); }
+.why-text p { margin: 0 0 16px; font-size: 17px; line-height: 1.65; color: var(--soft); max-width: 34em; }
+.compare { position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; user-select: none; }
+.compare img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.tag { position: absolute; top: 14px; padding: 6px 12px; border-radius: 999px; background: rgba(15, 20, 36, 0.72); font-size: 13px; font-weight: 600; pointer-events: none; }
+.tag.left { left: 14px; }
+.tag.right { right: 14px; }
+.handle { position: absolute; top: 0; bottom: 0; width: 44px; margin-left: -22px; cursor: ew-resize; touch-action: none; }
+.handle::before { content: ''; position: absolute; left: 21px; top: 0; bottom: 0; width: 2px; background: var(--paper); }
+.handle::after { content: ''; position: absolute; left: 6px; top: 50%; width: 32px; height: 32px; margin-top: -16px; border-radius: 50%; background: var(--paper); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4); }
 
-.grid { display: grid; gap: 18px; }
-.three { grid-template-columns: repeat(3, 1fr); }
-.four { grid-template-columns: repeat(4, 1fr); }
-.two { grid-template-columns: 1.15fr 0.85fr; }
-.card { position: relative; padding: 24px; border-radius: 24px; }
-.card h3 { margin: 14px 0 8px; font-size: 19px; color: inherit; }
-.card p { margin: 0; color: var(--soft); line-height: 1.55; font-size: 15px; }
-.icon, .num { position: relative; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; font-weight: 800; color: #7cf5c8; }
-.num { border-radius: 50%; }
-.code pre { margin: 0 0 18px; font: 14px/1.7 var(--vp-font-family-mono); color: #e6edf3; white-space: pre-wrap; }
-.code .k { color: #ff7b9c; }
+.code { margin: 0 0 18px; padding: 22px 26px; border-radius: 14px; background: #0a0e1a; border: 1px solid rgba(169, 154, 214, 0.18); font: 15px/1.8 var(--vp-font-family-mono); color: #e7e3f2; overflow-x: auto; }
+.code .k { color: var(--peach); }
 .code .s { color: #a5d6ff; }
-.code .a { color: #7cf5c8; }
-.ai code { display: block; margin: 16px 0 20px; padding: 12px 14px; border-radius: 12px; background: rgba(0, 0, 0, 0.35); font-size: 14px; color: #7cf5c8; }
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.stat { position: relative; padding: 22px; border-radius: 999px; text-align: center; }
-.stat strong { display: block; font-size: 34px; font-weight: 800; letter-spacing: -0.02em; }
-.stat span { color: var(--soft); font-size: 14px; }
-.community { padding: 40px; text-align: center; }
-.community p { max-width: 640px; margin: 0 auto 24px; font-size: 17px; }
-.community .ctas { justify-content: center; }
+.code .a { color: var(--lilac); }
+.prompt { margin: 0 0 22px; padding: 18px 20px; border-radius: 14px; background: linear-gradient(180deg, rgba(169, 154, 214, 0.14), rgba(169, 154, 214, 0.05)); border: 1px solid rgba(169, 154, 214, 0.3); }
+.prompt-label { margin: 0 0 10px; font-size: 14px; color: var(--soft); }
+.prompt-row { display: flex; gap: 14px; align-items: center; }
+.prompt-row code { flex: 1; font: 15px/1.55 var(--vp-font-family-mono); color: var(--paper); background: none; padding: 0; }
+.btn.small { padding: 9px 16px; font-size: 14px; white-space: nowrap; }
+@media (max-width: 640px) { .prompt-row { flex-direction: column; align-items: flex-start; } }
+.note { margin: 0; font-size: 16px; line-height: 1.7; color: var(--soft); }
+.note code { padding: 3px 8px; border-radius: 6px; background: #0a0e1a; color: var(--paper); }
+.note a, .proof a { color: var(--peach); }
 
-@media (max-width: 960px) {
-  .hero { grid-template-columns: 1fr; }
-  .mock { height: 440px; }
-  .three { grid-template-columns: 1fr 1fr; }
-  .four, .stats { grid-template-columns: 1fr 1fr; }
-  .two { grid-template-columns: 1fr; }
+.proof p { margin: 0; max-width: 24em; font-size: clamp(24px, 2.8vw, 38px); line-height: 1.25; font-weight: 700; font-stretch: 112%; color: var(--paper); }
+.proof a { font-size: 16px; font-weight: 600; font-stretch: 100%; white-space: nowrap; }
+.end { padding-bottom: 140px; }
+.end p { max-width: 36em; margin: -12px 0 28px; font-size: 17px; line-height: 1.65; color: var(--soft); }
+
+@media (max-width: 900px) {
+  .lens { left: 50% !important; top: 34% !important; width: 58vw; }
+  .lens-note { display: none; }
+  .hero-copy { right: 24px; left: 24px; bottom: 6vh; }
+  .stills, .why { grid-template-columns: 1fr; }
+  .still.big { grid-row: auto; }
+  .still.big img { height: auto; aspect-ratio: 16 / 10; min-height: 0; }
 }
-@media (max-width: 640px) {
-  .mock .gem, .mock .kaleido, .speed { display: none; }
-  .inv { left: 0; width: 100%; }
-  .three, .four { grid-template-columns: 1fr; }
-  .ui { width: 240px; }
-  .stat { border-radius: 24px; }
+@media (prefers-reduced-motion: reduce) {
+  .lens { transition: none; }
 }
 </style>
