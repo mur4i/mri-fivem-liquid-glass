@@ -1,0 +1,14 @@
+{
+  "id": "diamond-gem",
+  "name": "Diamond gem",
+  "author": "mur4i",
+  "description": "A cut gem: diamond outline, faceted lens, strong dispersion.",
+  "attributes": {
+    "data-glass": "liquid",
+    "data-glass-shape": "diamond",
+    "data-glass-lens": "gem",
+    "data-glass-facets": "8",
+    "data-glass-dispersion": "0.9",
+    "data-glass-specular": "0.6"
+  }
+}

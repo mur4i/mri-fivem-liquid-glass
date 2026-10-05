@@ -1,0 +1,16 @@
+{
+  "id": "crystal",
+  "name": "Crystal",
+  "author": "mur4i",
+  "description": "Thin bevel that bends the scene hard. Sharp, glassy buttons.",
+  "options": {
+    "blur": 10
+  },
+  "attributes": {
+    "data-glass": "liquid",
+    "data-glass-bezel": "14",
+    "data-glass-refraction": "34",
+    "data-glass-dispersion": "0.8",
+    "data-glass-specular": "0.7"
+  }
+}

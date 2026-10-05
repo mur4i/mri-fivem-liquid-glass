@@ -1,0 +1,9 @@
+{
+  "id": "liquid",
+  "name": "Liquid",
+  "author": "mur4i",
+  "description": "The default liquid glass: soft bevel, light refraction and color split.",
+  "attributes": {
+    "data-glass": "liquid"
+  }
+}

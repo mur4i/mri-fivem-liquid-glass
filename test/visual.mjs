@@ -1,10 +1,36 @@
-// Visual smoke test: loads the demo in headless Chrome and checks the glass canvas pixel by pixel.
-// Usage: npm run build && npm test   (CHROME=/path/to/chrome to override, SHOT=out.png to save)
+// Visual smoke test: loads the built playground in headless Chrome and checks the glass canvas pixel by pixel.
+// Usage: npm run docs:build && npm test   (CHROME=/path/to/chrome to override, SHOT=out.png to save)
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { serve } from '../scripts/serve.mjs';
+import http from 'node:http';
+
+const BASE = '/mri-fivem-liquid-glass/';
+const site = path.resolve(import.meta.dirname, '../docs/.vitepress/dist');
+const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.webp': 'image/webp', '.png': 'image/png', '.svg': 'image/svg+xml', '.json': 'application/json', '.woff2': 'font/woff2' };
+
+// Serves the VitePress build under its base path, with clean URLs (/playground -> playground.html).
+function serve(port) {
+  const server = http.createServer((req, res) => {
+    let url = decodeURIComponent((req.url || '/').split('?')[0]);
+    if (!url.startsWith(BASE)) return res.writeHead(404).end();
+    url = url.slice(BASE.length) || 'index.html';
+    let file = path.resolve(site, url);
+    if (!file.startsWith(site)) return res.writeHead(403).end();
+    if (!path.extname(file)) file += fs.existsSync(file + '.html') ? '.html' : '/index.html';
+    fs.readFile(file, (err, data) => {
+      if (err) return res.writeHead(404).end('not found');
+      res.writeHead(200, { 'Content-Type': types[path.extname(file)] || 'application/octet-stream' }).end(data);
+    });
+  });
+  return new Promise((resolve) => server.listen(port, '127.0.0.1', () => resolve(server)));
+}
+
+if (!fs.existsSync(path.join(site, 'playground.html'))) {
+  console.error('docs/.vitepress/dist/playground.html missing: run npm run docs:build first');
+  process.exit(1);
+}
 
 const chromePath = process.env.CHROME || ({
   win32: 'C:/Program Files/Google/Chrome/Application/chrome.exe',
@@ -23,7 +49,7 @@ const chrome = spawn(chromePath, [
 
 // Runs in the page: reads the WebGL glass canvas through a 2D copy.
 const probe = `(() => {
-  const gl = [...document.querySelectorAll('canvas')].find((c) => c.id !== 'scene');
+  const gl = [...document.querySelectorAll('canvas')].find((c) => !c.classList.contains('pg-scene'));
   if (!gl) return { error: 'glass canvas missing' };
   const copy = document.createElement('canvas');
   copy.width = gl.width;
@@ -32,13 +58,13 @@ const probe = `(() => {
   g.drawImage(gl, 0, 0);
   const alpha = (x, y) => g.getImageData(Math.round(x), Math.round(y), 1, 1).data[3];
   const rect = (sel) => document.querySelector(sel).getBoundingClientRect();
-  const hero = rect('.hero');
-  const orb = rect('#orb');
+  const hero = rect('.pg-brand');
+  const orb = rect('#pg-orb');
   return {
     heroInside: alpha(hero.left + hero.width / 2, hero.top + hero.height / 2),
     orbInside: alpha(orb.left + orb.width / 2, orb.top + orb.height / 2),
     orbCorner: alpha(orb.left + 4, orb.top + 4),
-    outside: alpha(hero.right + 40, hero.bottom + 120),
+    outside: alpha(innerWidth / 2, 40),
     tones: [...document.querySelectorAll('[data-glass]')].filter((e) => e.dataset.glassBackdrop).length,
     total: document.querySelectorAll('[data-glass]').length,
   };
@@ -75,7 +101,7 @@ try {
 
   await send('Runtime.enable');
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
-  await send('Page.navigate', { url: `http://127.0.0.1:${httpPort}/` });
+  await send('Page.navigate', { url: `http://127.0.0.1:${httpPort}${BASE}playground` });
 
   let r = {};
   for (let i = 0; i < 40; i++) {

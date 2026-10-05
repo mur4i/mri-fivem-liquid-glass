@@ -1,0 +1,13 @@
+{
+  "id": "frost",
+  "name": "Frost",
+  "author": "mur4i",
+  "description": "Plain frosted glass, no rim. Best for large panels with text.",
+  "options": {
+    "blur": 18,
+    "saturation": 1.1
+  },
+  "attributes": {
+    "data-glass": ""
+  }
+}

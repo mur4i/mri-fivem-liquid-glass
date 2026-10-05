@@ -1,0 +1,11 @@
+{
+  "id": "kaleidoscope",
+  "name": "Kaleidoscope",
+  "author": "mur4i",
+  "description": "Mirrors whatever is behind the element into eight slices.",
+  "attributes": {
+    "data-glass": "liquid",
+    "data-glass-lens": "kaleidoscope",
+    "data-glass-facets": "8"
+  }
+}

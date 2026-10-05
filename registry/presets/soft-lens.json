@@ -1,0 +1,17 @@
+{
+  "id": "soft-lens",
+  "name": "Soft lens",
+  "author": "mur4i",
+  "description": "Wide, gentle bevel with almost no color split. Calm and premium.",
+  "options": {
+    "blur": 20,
+    "saturation": 1.05
+  },
+  "attributes": {
+    "data-glass": "liquid",
+    "data-glass-bezel": "40",
+    "data-glass-refraction": "16",
+    "data-glass-dispersion": "0.1",
+    "data-glass-specular": "0.3"
+  }
+}
