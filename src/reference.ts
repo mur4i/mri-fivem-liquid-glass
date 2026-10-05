@@ -27,7 +27,7 @@ export const OPTIONS: OptionInfo[] = [
   { name: 'zIndex', type: 'number', default: d.zIndex, description: 'z-index of the glass canvas. Your UI root must sit above it.' },
   { name: 'toneInterval', type: 'number', default: d.toneInterval, description: 'Milliseconds between data-glass-backdrop updates.' },
   { name: 'light', type: '[number, number]', default: d.light, description: 'Direction of the rim highlight in screen space (x right, y down). Default comes from the top left.' },
-  { name: 'fallbackImage', type: 'string | TexImageSource | null', default: d.fallbackImage, description: 'Image used instead of the game outside FiveM (browser dev, screenshots). Without it the library stays off outside the game.' },
+  { name: 'fallbackImage', type: 'string | TexImageSource | null', default: d.fallbackImage, description: 'Image used instead of the game outside FiveM (browser dev, screenshots). A canvas or video is read live every frame, so a 3D scene or a gameplay clip works as a moving backdrop. Without it the library stays off outside the game.' },
 ]
 
 export const ATTRIBUTES: AttributeInfo[] = [

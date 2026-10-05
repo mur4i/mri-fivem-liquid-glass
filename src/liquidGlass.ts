@@ -309,6 +309,7 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
   let elements: HTMLElement[] = []
   let meta = new WeakMap<Element, Meta>()
   let fallbackSource: TexImageSource | null = null
+  let liveFallback = false
 
   let fence: WebGLSync | null = null
   let fenceStart = 0
@@ -492,6 +493,8 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
   // Frame goes to sharpNext; it only becomes the visible sharp frame once the readback approves it.
   function capture(g: WebGL2RenderingContext, res: Resources, now: number) {
     if (!res.sharpNext || !res.src) return
+    // A canvas or video fallback is live (a 3D scene, a gameplay clip): read it again every capture.
+    if (!inGame && liveFallback) uploadFallback()
     down(g, res, res.game, res.sharpNext)
     down(g, res, res.sharpNext.tex, res.src)
     pass(g, res.copy, res.src.tex, res.thumb)
@@ -877,6 +880,7 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
       img.src = o.fallbackImage
     } else {
       fallbackSource = o.fallbackImage
+      liveFallback = fallbackSource instanceof HTMLCanvasElement || fallbackSource instanceof HTMLVideoElement
       uploadFallback()
     }
   }
