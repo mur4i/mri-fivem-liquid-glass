@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/mur4i/mri-fivem-liquid-glass/compare/v1.0.1...v1.1.0) (2026-10-05)
+
+
+### Features
+
+* diamond shape, gem and kaleidoscope lenses ([6f647a5](https://github.com/mur4i/mri-fivem-liquid-glass/commit/6f647a5a785c31cd62b74cad9136a24c61476308))
+
 ## [1.0.1](https://github.com/mur4i/mri-fivem-liquid-glass/compare/v1.0.0...v1.0.1) (2026-10-05)
 
 
