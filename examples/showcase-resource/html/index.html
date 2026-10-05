@@ -130,6 +130,7 @@
   function render(open) {
     // Removing the markup on close stops the glass loop.
     if (!open) {
+      root.classList.remove('looking');
       root.innerHTML = '';
       glass?.stop();
       glass = null;
@@ -210,14 +211,24 @@
       orb.addEventListener('pointerup', () => orb.removeEventListener('pointermove', move), { once: true });
       return;
     }
-    // Empty space: the game takes the mouse until the button is released.
-    if (!e.target.closest('[data-glass]')) post('look');
+    // Empty space: the game gets the mouse while the button is held; the page still sees the release.
+    if (!e.target.closest('[data-glass]')) {
+      root.classList.add('looking');
+      post('lookStart');
+    }
   });
+
+  const endLook = () => {
+    if (!root.classList.contains('looking')) return;
+    root.classList.remove('looking');
+    post('lookEnd');
+  };
+  window.addEventListener('pointerup', endLook);
+  window.addEventListener('blur', endLook);
 
   window.addEventListener('message', (e) => {
     const data = e.data || {};
     if (data.action === 'toggle') render(data.open);
-    if (data.action === 'looking') root.classList.toggle('looking', data.state);
   });
 
   window.addEventListener('keydown', (e) => {
