@@ -63,8 +63,10 @@
     "access": "public"
   },
   "devDependencies": {
+    "@types/three": "^0.186.0",
     "esbuild": "^0.28.2",
     "semantic-release": "^25.0.9",
+    "three": "^0.186.1",
     "typescript": "^7.0.2",
     "vitepress": "^1.6.4",
     "vue": "^3.5.43"
