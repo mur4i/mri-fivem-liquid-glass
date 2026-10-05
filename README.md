@@ -16,7 +16,7 @@ it blurs and refracts the live GTA V frame behind your HTML elements.
 [How it works](docs/how-it-works.md) ·
 [Português](README.pt-BR.md)
 
-![Frosted panels and liquid glass buttons over a city at sunset](docs/assets/demo.webp)
+![Frosted panels and liquid glass buttons over a GTA V screenshot](docs/assets/demo.webp)
 
 </div>
 
@@ -81,8 +81,9 @@ No bundler? Load the single-file build, which exposes `window.MriLiquidGlass`:
 
    Do **not** use `backdrop-filter` on these elements.
 
-A complete resource (fxmanifest, Lua and HTML) lives in
-[examples/vanilla-resource](examples/vanilla-resource). Type `/glassdemo` in game.
+A minimal resource (fxmanifest, Lua and HTML) lives in
+[examples/vanilla-resource](examples/vanilla-resource) (`/glassdemo`), and the full in game
+showcase in [examples/showcase-resource](examples/showcase-resource) (`/glassshowcase`).
 
 ### React
 

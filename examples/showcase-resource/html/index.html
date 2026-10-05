@@ -1,0 +1,131 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  :root { --ink: #fff; --ink-soft: rgba(255, 255, 255, 0.7); --ink-dark: #14111c; --accent: #00e699; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: transparent; color: var(--ink);
+    font: 500 15px/1.4 'Segoe UI', system-ui, sans-serif; user-select: none; }
+  #root { position: relative; z-index: 1; height: 100%; }
+
+  [data-glass] {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 18px 40px rgba(0, 0, 0, 0.3);
+    transition: color 0.25s, background 0.2s, transform 0.2s;
+  }
+  [data-glass-backdrop="bright"] { color: var(--ink-dark); }
+  [data-glass-backdrop="bright"] .soft { color: rgba(20, 17, 28, 0.7); }
+  .soft { color: var(--ink-soft); }
+
+  .brand { left: 48px; top: 48px; width: 440px; padding: 26px 28px; border-radius: 28px; }
+  .brand h1 { margin: 0 0 6px; font-size: 26px; font-weight: 700; letter-spacing: -0.01em; }
+  .brand p { margin: 0; }
+  .brand .url { margin-top: 14px; font-size: 13px; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+  .menu { right: 48px; top: 50%; transform: translateY(-50%); width: 270px; padding: 8px; border-radius: 24px;
+    display: flex; flex-direction: column; gap: 6px; }
+  .menu .item { position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 18px; }
+  .menu .item:hover { background: rgba(255, 255, 255, 0.12); }
+  .menu .key { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-size: 12px;
+    font-weight: 700; background: rgba(255, 255, 255, 0.14); }
+
+  .dock { left: 50%; bottom: 40px; transform: translateX(-50%); padding: 10px; border-radius: 999px; display: flex; gap: 12px; }
+  .dock .btn { position: relative; width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center;
+    font-weight: 700; font-size: 18px; }
+  .dock .btn:hover { transform: scale(1.06); }
+
+  .orb { left: 0; top: 0; width: 200px; height: 200px; border-radius: 50%; display: grid; place-items: center;
+    text-align: center; font-weight: 600; transition: transform 0.12s ease-out; }
+
+  .hint { left: 48px; bottom: 40px; padding: 10px 16px; border-radius: 14px; font-size: 13px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<!-- Or copy dist/mri-liquid-glass.iife.min.js next to this file (and into fxmanifest files) to work offline. -->
+<script src="https://cdn.jsdelivr.net/npm/mri-fivem-liquid-glass/dist/mri-liquid-glass.iife.min.js"></script>
+<script>
+  const inGame = typeof GetParentResourceName === 'function';
+  const root = document.getElementById('root');
+  let orb = null;
+  let orbX = window.innerWidth * 0.62;
+  let orbY = window.innerHeight * 0.36;
+
+  const markup = (cursor) => `
+    <section class="brand" data-glass>
+      <h1>mri-fivem-liquid-glass</h1>
+      <p class="soft">Real liquid glass and game blur for FiveM NUI.</p>
+      <div class="url"><span class="dot"></span>github.com/mur4i/mri-fivem-liquid-glass</div>
+    </section>
+    <nav class="menu" data-glass>
+      <div class="item" data-glass="liquid"><span class="key">E</span>Open trunk</div>
+      <div class="item" data-glass="liquid"><span class="key">F</span>Check engine</div>
+      <div class="item" data-glass="liquid"><span class="key">G</span>Lock vehicle</div>
+      <div class="item" data-glass="liquid"><span class="key">H</span>Give keys</div>
+    </nav>
+    <div class="orb" data-glass="liquid">Liquid<br>glass</div>
+    <div class="dock" data-glass>
+      <div class="btn" data-glass="liquid">1</div>
+      <div class="btn" data-glass="liquid">2</div>
+      <div class="btn" data-glass="liquid">3</div>
+      <div class="btn" data-glass="liquid">4</div>
+      <div class="btn" data-glass="liquid">5</div>
+    </div>
+    <div class="hint soft" data-glass>${cursor ? 'Move the mouse to drag the orb. Esc to release.' : '/glasscursor to drag the orb'}</div>`;
+
+  function placeOrb() {
+    if (orb) orb.style.transform = `translate(${orbX - 100}px, ${orbY - 100}px)`;
+  }
+
+  function render(visible, cursor) {
+    // Removing the markup on close stops the glass loop.
+    root.innerHTML = visible ? markup(cursor) : '';
+    orb = root.querySelector('.orb');
+    placeOrb();
+  }
+
+  window.addEventListener('mousemove', (e) => {
+    orbX = e.clientX;
+    orbY = e.clientY;
+    placeOrb();
+  });
+
+  window.addEventListener('message', (e) => {
+    if (e.data?.action === 'state') render(e.data.visible, e.data.cursor);
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && inGame) fetch(`https://${GetParentResourceName()}/release`, { method: 'POST', body: '{}' });
+  });
+
+  if (inGame) {
+    MriLiquidGlass.startGameGlass();
+  } else {
+    // Browser preview: a painted backdrop stands in for the game.
+    const scene = document.createElement('canvas');
+    scene.width = innerWidth;
+    scene.height = innerHeight;
+    Object.assign(scene.style, { position: 'fixed', inset: '0', zIndex: '-1' });
+    const g = scene.getContext('2d');
+    const sky = g.createLinearGradient(0, 0, innerWidth, innerHeight);
+    sky.addColorStop(0, '#1b1446');
+    sky.addColorStop(0.55, '#c2416b');
+    sky.addColorStop(1, '#ffc56b');
+    g.fillStyle = sky;
+    g.fillRect(0, 0, innerWidth, innerHeight);
+    for (let x = 0; x < innerWidth; x += 46) {
+      g.fillStyle = x % 92 ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.85)';
+      g.fillRect(x, 0, 5, innerHeight);
+    }
+    document.body.prepend(scene);
+    MriLiquidGlass.startGameGlass({ fallbackImage: scene, temporal: 1 });
+    render(true, false);
+  }
+</script>
+</body>
+</html>
