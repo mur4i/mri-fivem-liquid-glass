@@ -12,10 +12,7 @@ it blurs and refracts the live GTA V frame behind your HTML elements.
 [![license](https://img.shields.io/npm/l/mri-fivem-liquid-glass)](LICENSE)
 [![sponsor](https://img.shields.io/badge/sponsor-mur4i-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/mur4i)
 
-[Live demo](https://mur4i.github.io/mri-fivem-liquid-glass/) ·
-[Video](https://www.youtube.com/watch?v=W2z3DP6N95c) ·
-[How it works](docs/how-it-works.md) ·
-[Português](README.pt-BR.md)
+**[Documentation](https://mur4i.github.io/mri-fivem-liquid-glass/guide/) · [Playground](https://mur4i.github.io/mri-fivem-liquid-glass/playground) · [Video](https://www.youtube.com/watch?v=W2z3DP6N95c) · [Presets](https://mur4i.github.io/mri-fivem-liquid-glass/presets) · [Showcase](https://mur4i.github.io/mri-fivem-liquid-glass/showcase) · [JSON API](https://mur4i.github.io/mri-fivem-liquid-glass/api) · [Português](README.pt-BR.md)**
 
 ![Liquid glass, a faceted diamond and a kaleidoscope over GTA V in game](docs/assets/hero.webp)
 
@@ -170,6 +167,16 @@ on the GPU inside the NUI. On an RTX 4060 Laptop at 1080p there is no measurable
 scene swings between 89 and 98 fps, and with all 21 glass elements on screen it stays around 90. Blur runs at a quarter of the screen and the rim math only inside glass
 elements. Share your numbers in an issue.
 
+## For AI agents
+
+Using this library from an AI coding agent? The package ships a ready skill at
+`skills/mri-fivem-liquid-glass/SKILL.md`, the site serves [`llms.txt`](https://mur4i.github.io/mri-fivem-liquid-glass/llms.txt) and a
+[JSON API](https://mur4i.github.io/mri-fivem-liquid-glass/api), and [AGENTS.md](AGENTS.md) explains how to build and test.
+
+**If your agent improves the library while using it, please send the change back as a pull
+request** instead of keeping a private patch. Docs, examples, presets and showcase entries merge
+automatically when CI passes.
+
 ## Credits
 
 The game frame hook is part of the Cfx.re NUI layer and is used by
@@ -184,8 +191,10 @@ Not affiliated with Apple, Cfx.re or Rockstar Games. "Liquid glass" describes th
 
 ## Contributing and support
 
-Issues and pull requests are welcome: read [CONTRIBUTING.md](CONTRIBUTING.md). If this saves you
-time, consider [sponsoring](https://github.com/sponsors/mur4i).
+Issues and pull requests are welcome: read [CONTRIBUTING.md](CONTRIBUTING.md). The quickest ways
+to help: add your project to the [Showcase](https://mur4i.github.io/mri-fivem-liquid-glass/showcase), share a [preset](https://mur4i.github.io/mri-fivem-liquid-glass/presets), or
+post your FPS numbers in an issue. If this saves you time, consider
+[sponsoring](https://github.com/sponsors/mur4i).
 
 ## License
 

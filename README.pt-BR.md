@@ -7,10 +7,7 @@
 O `backdrop-filter` do CSS não enxerga o jogo dentro do navegador do FiveM. Esta biblioteca
 enxerga: ela desfoca e refrata o frame do GTA V, ao vivo, atrás dos seus elementos HTML.
 
-[Demo ao vivo](https://mur4i.github.io/mri-fivem-liquid-glass/) ·
-[Vídeo](https://www.youtube.com/watch?v=W2z3DP6N95c) ·
-[Como funciona](docs/how-it-works.md) ·
-[English](README.md)
+**[Documentação](https://mur4i.github.io/mri-fivem-liquid-glass/pt/guide/) · [Playground](https://mur4i.github.io/mri-fivem-liquid-glass/playground) · [Vídeo](https://www.youtube.com/watch?v=W2z3DP6N95c) · [Presets](https://mur4i.github.io/mri-fivem-liquid-glass/presets) · [Vitrine](https://mur4i.github.io/mri-fivem-liquid-glass/showcase) · [API JSON](https://mur4i.github.io/mri-fivem-liquid-glass/api) · [English](README.md)**
 
 ![Liquid glass, um diamante lapidado e um caleidoscópio sobre o GTA V no jogo](docs/assets/hero.webp)
 
@@ -165,6 +162,16 @@ GPU, dentro da NUI. Numa RTX 4060 Laptop em 1080p não há queda de FPS mensurá
 e 98 fps, e com os 21 elementos de vidro na tela fica em torno de 90. O blur roda em 1/4 da tela e a conta do bisel só dentro dos elementos de vidro.
 Mande seus números numa issue.
 
+## Para agentes de IA
+
+Usando esta biblioteca com um agente de IA? O pacote traz uma skill pronta em
+`skills/mri-fivem-liquid-glass/SKILL.md`, o site tem o [`llms.txt`](https://mur4i.github.io/mri-fivem-liquid-glass/llms.txt) e uma
+[API em JSON](https://mur4i.github.io/mri-fivem-liquid-glass/api), e o [AGENTS.md](AGENTS.md) explica como buildar e testar.
+
+**Se o seu agente melhorar a biblioteca enquanto usa, mande a mudança de volta num pull request**
+em vez de guardar um patch só seu. Docs, exemplos, presets e projetos da vitrine entram sozinhos
+quando o CI passa.
+
 ## Créditos
 
 O hook do frame do jogo faz parte da camada de NUI da Cfx.re e é usado pelo
@@ -179,7 +186,9 @@ Sem vínculo com Apple, Cfx.re ou Rockstar Games. "Liquid glass" descreve o esti
 
 ## Contribuir e apoiar
 
-Issues e pull requests são bem-vindos: leia o [CONTRIBUTING.md](CONTRIBUTING.md). Se isto te
+Issues e pull requests são bem-vindos: leia o [CONTRIBUTING.md](CONTRIBUTING.md). Os jeitos mais
+rápidos de ajudar: colocar o seu projeto na [vitrine](https://mur4i.github.io/mri-fivem-liquid-glass/showcase), compartilhar um
+[preset](https://mur4i.github.io/mri-fivem-liquid-glass/presets) ou mandar seus números de FPS numa issue. Se isto te
 poupou tempo, considere [apoiar](https://github.com/sponsors/mur4i).
 
 ## Licença

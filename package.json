@@ -18,7 +18,8 @@
     "./iife": "./dist/mri-liquid-glass.iife.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "skills"
   ],
   "sideEffects": false,
   "scripts": {
