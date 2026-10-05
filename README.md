@@ -83,7 +83,7 @@ No bundler? Load the single-file build, which exposes `window.MriLiquidGlass`:
 
 A minimal resource (fxmanifest, Lua and HTML) lives in
 [examples/vanilla-resource](examples/vanilla-resource) (`/glassdemo`), and the full in game
-showcase in [examples/showcase-resource](examples/showcase-resource) (`/glassshowcase`).
+showcase in [examples/showcase-resource](examples/showcase-resource) (`/liquidglass`).
 
 ### React
 

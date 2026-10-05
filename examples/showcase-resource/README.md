@@ -1,11 +1,14 @@
 # Showcase resource
 
-The full effect in game: frosted brand panel, a liquid interaction menu, a dock of liquid keys
-and a liquid orb that follows the mouse. Made for recording.
+The full effect in game, made for recording: frosted and liquid panels, an interaction menu, a
+dock of liquid keys, a draggable liquid orb and a control panel to morph the glass live.
 
 1. Copy this folder into your server `resources/` as `glass-showcase` and `ensure glass-showcase`.
-2. `/glassshowcase` toggles the overlay without taking focus: walk, drive and turn the camera
-   to see the glass react to the game.
-3. `/glasscursor` frees the mouse to drag the orb. `Esc` gives control back.
+2. `/liquidglass` opens it with the cursor. Run it again (or press `Esc`) to close.
+3. Drag the orb to move it. Drag anywhere else to look around: the game takes the mouse while
+   the button is held and gives it back when you release.
+4. Morph the glass with the sliders (blur, saturation, bezel, refraction, dispersion, specular,
+   tint, radius), switch the orb shape (circle, pill, square, big) and the panels between
+   frosted and liquid.
 
 Opened in a normal browser, the page paints a stand-in backdrop so you can preview the layout.

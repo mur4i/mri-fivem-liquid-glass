@@ -3,46 +3,64 @@
 <head>
 <meta charset="utf-8">
 <style>
-  :root { --ink: #fff; --ink-soft: rgba(255, 255, 255, 0.7); --ink-dark: #14111c; --accent: #00e699; }
+  :root { --ink: #fff; --ink-soft: rgba(255, 255, 255, 0.72); --ink-dark: #14111c; --accent: #00e699;
+    --tint: 0.06; --radius: 26px; }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; overflow: hidden; background: transparent; color: var(--ink);
-    font: 500 15px/1.4 'Segoe UI', system-ui, sans-serif; user-select: none; }
+    font: 500 14px/1.4 'Segoe UI', system-ui, sans-serif; user-select: none; }
   #root { position: relative; z-index: 1; height: 100%; }
+  #root.looking { cursor: none; }
 
   [data-glass] {
     position: absolute;
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, var(--tint));
     border: 1px solid rgba(255, 255, 255, 0.22);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 18px 40px rgba(0, 0, 0, 0.3);
-    transition: color 0.25s, background 0.2s, transform 0.2s;
+    transition: color 0.25s, background 0.2s;
   }
   [data-glass-backdrop="bright"] { color: var(--ink-dark); }
   [data-glass-backdrop="bright"] .soft { color: rgba(20, 17, 28, 0.7); }
   .soft { color: var(--ink-soft); }
 
-  .brand { left: 48px; top: 48px; width: 440px; padding: 26px 28px; border-radius: 28px; }
-  .brand h1 { margin: 0 0 6px; font-size: 26px; font-weight: 700; letter-spacing: -0.01em; }
+  .brand { left: 40px; top: 40px; width: 420px; padding: 24px 26px; border-radius: var(--radius); }
+  .brand h1 { margin: 0 0 6px; font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
   .brand p { margin: 0; }
-  .brand .url { margin-top: 14px; font-size: 13px; }
-  .brand .dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%;
+  .brand .url { margin-top: 12px; font-size: 13px; }
+  .dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%;
     background: var(--accent); box-shadow: 0 0 10px var(--accent); }
 
-  .menu { right: 48px; top: 50%; transform: translateY(-50%); width: 270px; padding: 8px; border-radius: 24px;
+  .menu { right: 40px; top: 40px; width: 260px; padding: 8px; border-radius: var(--radius);
     display: flex; flex-direction: column; gap: 6px; }
-  .menu .item { position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 18px; }
+  .menu .item { position: relative; display: flex; align-items: center; gap: 12px; padding: 11px 15px;
+    border-radius: calc(var(--radius) * 0.7); }
   .menu .item:hover { background: rgba(255, 255, 255, 0.12); }
-  .menu .key { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-size: 12px;
+  .key { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-size: 12px;
     font-weight: 700; background: rgba(255, 255, 255, 0.14); }
 
-  .dock { left: 50%; bottom: 40px; transform: translateX(-50%); padding: 10px; border-radius: 999px; display: flex; gap: 12px; }
-  .dock .btn { position: relative; width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center;
-    font-weight: 700; font-size: 18px; }
-  .dock .btn:hover { transform: scale(1.06); }
+  .dock { left: 50%; bottom: 36px; transform: translateX(-50%); padding: 10px; border-radius: 999px; display: flex; gap: 12px; }
+  .dock .btn { position: relative; width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center;
+    font-weight: 700; font-size: 17px; }
 
   .orb { left: 0; top: 0; width: 200px; height: 200px; border-radius: 50%; display: grid; place-items: center;
-    text-align: center; font-weight: 600; transition: transform 0.12s ease-out; }
+    text-align: center; font-weight: 600; cursor: grab; touch-action: none;
+    transition: width 0.45s cubic-bezier(.2, .9, .3, 1.2), height 0.45s cubic-bezier(.2, .9, .3, 1.2),
+      border-radius 0.45s cubic-bezier(.2, .9, .3, 1.2); }
+  .orb:active { cursor: grabbing; }
+  .orb.shape-pill { width: 300px; height: 110px; border-radius: 999px; }
+  .orb.shape-square { width: 200px; height: 200px; border-radius: 36px; }
+  .orb.shape-big { width: 320px; height: 320px; border-radius: 50%; }
 
-  .hint { left: 48px; bottom: 40px; padding: 10px 16px; border-radius: 14px; font-size: 13px; }
+  .controls { left: 40px; bottom: 36px; width: 320px; padding: 16px 18px; border-radius: var(--radius); }
+  .controls h2 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .row { display: grid; grid-template-columns: 86px 1fr 38px; align-items: center; gap: 8px; margin: 4px 0; }
+  .row output { text-align: right; font-variant-numeric: tabular-nums; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  .shapes, .modes { display: flex; gap: 6px; margin-top: 10px; }
+  .chip { position: relative; flex: 1; padding: 7px 0; text-align: center; border-radius: 999px; cursor: pointer;
+    font-size: 12px; font-weight: 600; }
+  .chip.on { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+  .hint { right: 40px; bottom: 36px; padding: 10px 14px; border-radius: 14px; font-size: 12px; max-width: 300px; }
 </style>
 </head>
 <body>
@@ -51,63 +69,165 @@
 <script src="https://cdn.jsdelivr.net/npm/mri-fivem-liquid-glass/dist/mri-liquid-glass.iife.min.js"></script>
 <script>
   const inGame = typeof GetParentResourceName === 'function';
+  const post = (name) => inGame && fetch(`https://${GetParentResourceName()}/${name}`, { method: 'POST', body: '{}' });
   const root = document.getElementById('root');
-  let orb = null;
-  let orbX = window.innerWidth * 0.62;
-  let orbY = window.innerHeight * 0.36;
 
-  const markup = (cursor) => `
-    <section class="brand" data-glass>
-      <h1>mri-fivem-liquid-glass</h1>
-      <p class="soft">Real liquid glass and game blur for FiveM NUI.</p>
-      <div class="url"><span class="dot"></span>github.com/mur4i/mri-fivem-liquid-glass</div>
-    </section>
-    <nav class="menu" data-glass>
-      <div class="item" data-glass="liquid"><span class="key">E</span>Open trunk</div>
-      <div class="item" data-glass="liquid"><span class="key">F</span>Check engine</div>
-      <div class="item" data-glass="liquid"><span class="key">G</span>Lock vehicle</div>
-      <div class="item" data-glass="liquid"><span class="key">H</span>Give keys</div>
-    </nav>
-    <div class="orb" data-glass="liquid">Liquid<br>glass</div>
-    <div class="dock" data-glass>
-      <div class="btn" data-glass="liquid">1</div>
-      <div class="btn" data-glass="liquid">2</div>
-      <div class="btn" data-glass="liquid">3</div>
-      <div class="btn" data-glass="liquid">4</div>
-      <div class="btn" data-glass="liquid">5</div>
-    </div>
-    <div class="hint soft" data-glass>${cursor ? 'Move the mouse to drag the orb. Esc to release.' : '/glasscursor to drag the orb'}</div>`;
+  const settings = { blur: 14, saturation: 115, bezel: 22, refraction: 18, dispersion: 50, specular: 45, tint: 6, radius: 26 };
+  const sliders = [
+    ['blur', 'Blur', 2, 30], ['saturation', 'Saturation', 50, 200], ['bezel', 'Bezel', 4, 50],
+    ['refraction', 'Refraction', 0, 50], ['dispersion', 'Dispersion', 0, 100], ['specular', 'Specular', 0, 100],
+    ['tint', 'Tint', 0, 30], ['radius', 'Radius', 0, 48],
+  ];
+  let shape = 'circle';
+  let panelsLiquid = false;
+  let orbX = innerWidth * 0.6;
+  let orbY = innerHeight * 0.42;
+  let glass = null;
+
+  function startGlass() {
+    glass?.stop();
+    glass = MriLiquidGlass.startGameGlass({
+      blur: settings.blur,
+      saturation: settings.saturation / 100,
+      ...(inGame ? {} : { fallbackImage: document.getElementById('scene'), temporal: 1 }),
+    });
+  }
+
+  // Liquid elements read their lens from attributes; the glass picks attribute changes up by itself.
+  function applyLens() {
+    document.documentElement.style.setProperty('--tint', String(settings.tint / 100));
+    document.documentElement.style.setProperty('--radius', `${settings.radius}px`);
+    for (const el of root.querySelectorAll('[data-glass="liquid"]')) {
+      const small = Math.min(el.offsetWidth, el.offsetHeight);
+      el.dataset.glassBezel = String(Math.min(settings.bezel, small / 2));
+      el.dataset.glassRefraction = String(settings.refraction);
+      el.dataset.glassDispersion = String(settings.dispersion / 100);
+      el.dataset.glassSpecular = String(settings.specular / 100);
+    }
+    glass?.refresh();
+  }
+
+  // Radius and size animate during a morph, so the cached shape is re-read every frame until it ends.
+  function followMorph(el) {
+    let running = true;
+    const tick = () => {
+      if (!running) return;
+      placeOrb();
+      applyLens();
+      requestAnimationFrame(tick);
+    };
+    el.addEventListener('transitionend', () => { running = false; placeOrb(); applyLens(); }, { once: true });
+    requestAnimationFrame(tick);
+  }
 
   function placeOrb() {
-    if (orb) orb.style.transform = `translate(${orbX - 100}px, ${orbY - 100}px)`;
+    const orb = document.getElementById('orb');
+    if (orb) orb.style.transform = `translate(${orbX - orb.offsetWidth / 2}px, ${orbY - orb.offsetHeight / 2}px)`;
   }
 
-  function render(visible, cursor) {
+  const panel = (liquid) => (liquid ? 'data-glass="liquid"' : 'data-glass');
+
+  function render(open) {
     // Removing the markup on close stops the glass loop.
-    root.innerHTML = visible ? markup(cursor) : '';
-    orb = root.querySelector('.orb');
+    if (!open) {
+      root.innerHTML = '';
+      glass?.stop();
+      glass = null;
+      return;
+    }
+    root.innerHTML = `
+      <section class="brand" ${panel(panelsLiquid)}>
+        <h1>mri-fivem-liquid-glass</h1>
+        <p class="soft">Real liquid glass and game blur for FiveM NUI.</p>
+        <div class="url"><span class="dot"></span>github.com/mur4i/mri-fivem-liquid-glass</div>
+      </section>
+      <nav class="menu" ${panel(panelsLiquid)}>
+        <div class="item" data-glass="liquid"><span class="key">E</span>Open trunk</div>
+        <div class="item" data-glass="liquid"><span class="key">F</span>Check engine</div>
+        <div class="item" data-glass="liquid"><span class="key">G</span>Lock vehicle</div>
+        <div class="item" data-glass="liquid"><span class="key">H</span>Give keys</div>
+      </nav>
+      <div class="orb shape-${shape}" data-glass="liquid" id="orb">Drag me</div>
+      <div class="dock" ${panel(panelsLiquid)}>
+        ${[1, 2, 3, 4, 5].map((n) => `<div class="btn" data-glass="liquid">${n}</div>`).join('')}
+      </div>
+      <section class="controls" ${panel(panelsLiquid)}>
+        <h2>Morph the glass</h2>
+        ${sliders.map(([id, label, min, max]) => `
+          <label class="row">${label}<input type="range" data-key="${id}" min="${min}" max="${max}" value="${settings[id]}"><output>${settings[id]}</output></label>`).join('')}
+        <div class="shapes">
+          ${['circle', 'pill', 'square', 'big'].map((s) => `<div class="chip ${s === shape ? 'on' : ''}" data-glass="liquid" data-shape="${s}">${s}</div>`).join('')}
+        </div>
+        <div class="modes">
+          <div class="chip ${panelsLiquid ? '' : 'on'}" data-glass="liquid" data-panels="frosted">Frosted panels</div>
+          <div class="chip ${panelsLiquid ? 'on' : ''}" data-glass="liquid" data-panels="liquid">Liquid panels</div>
+        </div>
+      </section>
+      <div class="hint soft" data-glass>Drag the orb to move it. Drag anywhere else to look around. Esc to close.</div>`;
+
     placeOrb();
+    if (!glass) startGlass();
+    applyLens();
   }
 
-  window.addEventListener('mousemove', (e) => {
-    orbX = e.clientX;
-    orbY = e.clientY;
-    placeOrb();
+  root.addEventListener('input', (e) => {
+    const key = e.target.dataset?.key;
+    if (!key) return;
+    settings[key] = Number(e.target.value);
+    e.target.nextElementSibling.value = e.target.value;
+    if (key === 'blur' || key === 'saturation') startGlass();
+    applyLens();
+  });
+
+  root.addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    if (chip.dataset.shape) {
+      shape = chip.dataset.shape;
+      const orb = document.getElementById('orb');
+      orb.className = `orb shape-${shape}`;
+      root.querySelectorAll('[data-shape]').forEach((c) => c.classList.toggle('on', c === chip));
+      followMorph(orb);
+    } else if (chip.dataset.panels) {
+      panelsLiquid = chip.dataset.panels === 'liquid';
+      render(true);
+    }
+  });
+
+  root.addEventListener('pointerdown', (e) => {
+    const orb = e.target.closest('#orb');
+    if (orb) {
+      orb.setPointerCapture(e.pointerId);
+      const box = orb.getBoundingClientRect();
+      const dx = e.clientX - (box.left + box.width / 2);
+      const dy = e.clientY - (box.top + box.height / 2);
+      const move = (ev) => {
+        orbX = ev.clientX - dx;
+        orbY = ev.clientY - dy;
+        placeOrb();
+      };
+      orb.addEventListener('pointermove', move);
+      orb.addEventListener('pointerup', () => orb.removeEventListener('pointermove', move), { once: true });
+      return;
+    }
+    // Empty space: the game takes the mouse until the button is released.
+    if (!e.target.closest('[data-glass]')) post('look');
   });
 
   window.addEventListener('message', (e) => {
-    if (e.data?.action === 'state') render(e.data.visible, e.data.cursor);
+    const data = e.data || {};
+    if (data.action === 'toggle') render(data.open);
+    if (data.action === 'looking') root.classList.toggle('looking', data.state);
   });
 
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && inGame) fetch(`https://${GetParentResourceName()}/release`, { method: 'POST', body: '{}' });
+    if (e.key === 'Escape') post('close');
   });
 
-  if (inGame) {
-    MriLiquidGlass.startGameGlass();
-  } else {
+  if (!inGame) {
     // Browser preview: a painted backdrop stands in for the game.
     const scene = document.createElement('canvas');
+    scene.id = 'scene';
     scene.width = innerWidth;
     scene.height = innerHeight;
     Object.assign(scene.style, { position: 'fixed', inset: '0', zIndex: '-1' });
@@ -123,8 +243,7 @@
       g.fillRect(x, 0, 5, innerHeight);
     }
     document.body.prepend(scene);
-    MriLiquidGlass.startGameGlass({ fallbackImage: scene, temporal: 1 });
-    render(true, false);
+    render(true);
   }
 </script>
 </body>
