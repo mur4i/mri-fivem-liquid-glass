@@ -1,9 +1,7 @@
 name: Pages
 
 on:
-  push:
-    branches: [main]
-  # After a release the tag exists, so the site and the API show the new version.
+  # Release runs on every push to main; deploying after it (not on push too) avoids a cancelled duplicate run.
   workflow_run:
     workflows: [Release]
     types: [completed]
