@@ -16,7 +16,7 @@ it blurs and refracts the live GTA V frame behind your HTML elements.
 [How it works](docs/how-it-works.md) ·
 [Português](README.pt-BR.md)
 
-![Frosted panels and liquid glass buttons over a GTA V screenshot](docs/assets/demo.webp)
+![Liquid glass, a faceted diamond and a kaleidoscope over GTA V in game](docs/assets/hero.webp)
 
 </div>
 

@@ -11,7 +11,7 @@ enxerga: ela desfoca e refrata o frame do GTA V, ao vivo, atrás dos seus elemen
 [Como funciona](docs/how-it-works.md) ·
 [English](README.md)
 
-![Painéis foscos e botões de liquid glass sobre um print do GTA V](docs/assets/demo.webp)
+![Liquid glass, um diamante lapidado e um caleidoscópio sobre o GTA V no jogo](docs/assets/hero.webp)
 
 </div>
 
