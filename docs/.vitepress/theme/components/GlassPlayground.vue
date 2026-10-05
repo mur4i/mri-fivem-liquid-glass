@@ -308,6 +308,11 @@ input[type='range'] { width: 100%; accent-color: #00e699; }
 .pg-code { right: 28px; bottom: 24px; width: min(460px, 46vw); padding: 14px; border-radius: 18px; }
 .pg-code pre { margin: 0 0 10px; white-space: pre-wrap; font: 12px/1.5 var(--vp-font-family-mono); }
 .pg-code .chip { width: 100%; }
+/* Short screens: the controls need the height, the title panel steps aside. */
+@media (max-height: 760px) {
+  .pg-brand { display: none; }
+  .pg-controls { bottom: 16px; }
+}
 @media (max-width: 900px) {
   .pg-menu, .pg-gem, .pg-kaleido, .pg-code { display: none; }
   .pg-brand { width: calc(100% - 56px); }
