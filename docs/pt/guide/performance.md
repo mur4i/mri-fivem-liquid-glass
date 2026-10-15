@@ -22,7 +22,8 @@ Tem números de outra máquina? Manda numa
 - O desenho final só pinta os pixels dentro dos elementos de vidro.
 - A leitura de pixel (frame preto e tom do texto) usa uma miniatura 32x18 lida de forma
   assíncrona, então a GPU nunca espera.
-- Sem elemento de vidro no DOM: o loop para. Elemento escondido: nada é desenhado.
+- Sem elemento de vidro no DOM: o loop para e o canvas sai da página (o contexto WebGL só é
+  criado quando aparece o primeiro elemento de vidro). Elemento escondido: nada é desenhado.
 
 ## Dicas
 

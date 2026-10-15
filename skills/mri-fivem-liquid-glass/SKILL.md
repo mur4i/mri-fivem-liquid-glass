@@ -40,7 +40,7 @@ Docs: https://mur4i.github.io/mri-fivem-liquid-glass/ · Machine-readable: `/llm
 ## FiveM patterns
 
 - Open and close screens by adding and removing their markup; with no `[data-glass]` in the DOM
-  the loop stops.
+  the loop stops and the canvas leaves the page.
 - Camera drag while a screen is open: keep NUI focus, `SetNuiFocusKeepInput(true)` on pointer
   down on empty space, false on pointer up (the page sees the release); disable controls 24, 25,
   140, 141, 142, 257, 263 meanwhile. Dropping focus on mouse down breaks the drag.

@@ -23,7 +23,9 @@ Got numbers on other hardware? Share them in an
 - The final drawing only shades the pixels inside your glass elements.
 - Reading back pixels (to detect black frames and to choose the text tone) uses a 32x18
   thumbnail read asynchronously, so the GPU never waits.
-- No glass element in the DOM: the loop stops. Hidden elements: nothing is drawn.
+- No glass element in the DOM: the loop stops and the canvas leaves the page (the WebGL
+  context is only created once the first glass element appears). Hidden elements: nothing is
+  drawn.
 
 ## Tips
 

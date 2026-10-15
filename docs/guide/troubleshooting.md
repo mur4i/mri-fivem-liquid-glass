@@ -34,6 +34,14 @@ glass works; glass over an opaque NUI panel shows the game behind both.
 
 Rotation is not supported: the glass uses the element's bounding box. Scale and translate work.
 
+## Rounded panels lose their fill on AMD GPUs (fixed in 1.4.1)
+
+Up to 1.4.0 the canvas was inserted at start even with no glass element on screen. A GPU canvas
+under the page makes Chromium put every panel above it on its own compositor layer, and some AMD
+drivers drop the fill of rounded layers: the border shows, the background is gone, and a
+`border-radius` of 0 hides the bug. Since 1.4.1 the canvas only exists while a glass element is in
+the DOM. Update the package; nothing changes in your markup.
+
 ## Still stuck
 
 Open an [issue](https://github.com/mur4i/mri-fivem-liquid-glass/issues/new/choose) with a screenshot

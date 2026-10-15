@@ -96,5 +96,6 @@ dispersion 0.5, highlight 0.45.
 ## 6. Cost
 
 Everything heavy runs at a quarter (blur) or half (sharp) of the screen size. Composition only
-shades pixels inside glass elements. With no glass element left in the DOM the loop stops; with
+shades pixels inside glass elements. With no glass element left in the DOM the loop stops and
+the canvas is removed from the page (see Troubleshooting, AMD panels); with
 hidden elements it only measures rectangles.
