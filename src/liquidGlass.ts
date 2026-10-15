@@ -299,9 +299,9 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
     position: 'fixed', left: '0', top: '0', width: '100%', height: '100%',
     pointerEvents: 'none', zIndex: String(o.zIndex),
   })
-  document.body.insertBefore(canvas, document.body.firstChild)
 
   let gl: WebGL2RenderingContext | null = null
+  let initFailed = false
   let r: Resources | null = null
   let lost = false
   let running = false
@@ -834,10 +834,31 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
     if (init()) start()
   }
 
+  // An idle GPU canvas under the page still promotes every panel above it to its own layer,
+  // and AMD drivers drop the fill of rounded layers: keep it out of the DOM with nothing to draw.
+  function attach(): boolean {
+    if (!canvas.isConnected) document.body.insertBefore(canvas, document.body.firstChild)
+    if (gl && r) return true
+    if (initFailed || lost) return false
+    if (init()) return true
+    initFailed = true
+    canvas.remove()
+    return false
+  }
+
+  function detach() {
+    running = false
+    if (raf) cancelAnimationFrame(raf)
+    raf = 0
+    if (gl) clearCanvas(gl)
+    canvas.remove()
+  }
+
   function scan() {
     meta = new WeakMap()
     elements = Array.from(document.querySelectorAll<HTMLElement>(o.selector))
-    if (elements.length) start()
+    if (!elements.length) detach()
+    else if (attach()) start()
   }
 
   let scanQueued = false
@@ -852,7 +873,7 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
 
   const onResize = () => {
     resize()
-    start()
+    if (canvas.isConnected) start()
   }
   const onLost = (e: Event) => {
     e.preventDefault()
@@ -866,10 +887,6 @@ export function startGameGlass(options: GameGlassOptions = {}): GameGlassHandle 
     if (init()) scan()
   }
 
-  if (!init()) {
-    canvas.remove()
-    return NOOP
-  }
   if (!inGame && o.fallbackImage) {
     if (typeof o.fallbackImage === 'string') {
       const img = new Image()
